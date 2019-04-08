@@ -1,0 +1,17 @@
+[package]
+name = "service_test"
+version = "0.1.0"
+authors = ["Lionel Sambuc <lionel.sambuc@epfl.ch>"]
+edition = "2018"
+
+[dependencies]
+# Framework Web
+futures = "0.1"
+#env_logger = "0.5"
+
+actix = "0.7"
+actix-web = "0.7"
+
+# Logging macros API
+log = { version = "0.4", features = ["max_level_trace", "release_max_level_info"] }
+pretty_env_logger = "0.3"	# Logger implementation
