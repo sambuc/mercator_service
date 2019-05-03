@@ -11,7 +11,7 @@ extern crate pretty_env_logger;
 use std::sync::Arc;
 use std::sync::RwLock;
 
-mod solr_api;
+mod rest_api;
 
 /*
 fn into_bool(string: &str) -> bool {
@@ -20,7 +20,7 @@ fn into_bool(string: &str) -> bool {
 */
 
 fn main() {
-    std::env::set_var("RUST_LOG", "info");
+//    std::env::set_var("RUST_LOG", "info");
     pretty_env_logger::init();
 
     //TODO Retrieve from environment values, with fall back to defaults if unset.
@@ -28,5 +28,5 @@ fn main() {
     let base = "/spatial-search";
     let port = 8888;
 
-    solr_api::run(hostname, port, base, Arc::new(RwLock::new(0)));
+    rest_api::run(hostname, port, base, Arc::new(RwLock::new(0)));
 }
