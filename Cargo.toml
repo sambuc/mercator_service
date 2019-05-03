@@ -6,8 +6,7 @@ edition = "2018"
 
 [dependencies]
 # Framework Web
-futures = "0.1"
-#env_logger = "0.5"
+#futures = "0.1"
 
 actix = "0.7"
 actix-web = "0.7"
