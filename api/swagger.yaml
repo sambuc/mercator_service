@@ -1,0 +1,2140 @@
+---
+swagger: "2.0"
+info:
+  description: "API Documentation for the spatial search backend."
+  version: "0.2.0"
+  title: "Spatial Search Backend API Documentation"
+  termsOfService: ""
+  contact: {}
+  license:
+    name: "The MIT License"
+    url: "https://opensource.org/licenses/MIT"
+tags:
+- name: "Actions"
+  description: "General Database actions."
+- name: "Spaces"
+  description: "Operations on Reference Spaces."
+- name: "Data Sets"
+  description: "Operations on Data Sets."
+- name: "Spatial Objects"
+  description: "Operations on Spatial Objects."
+paths:
+  /health:
+    get:
+      tags:
+      - "Actions"
+      summary: "Health check of the service.\n"
+      description: "Please note that making anything but a **GET** call is a bad request.\n"
+      operationId: "get_health_check"
+      parameters: []
+      responses:
+        200:
+          description: "OK\n"
+          x-responseId: "OK_"
+          x-uppercaseResponseId: "OK_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECTS"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "get_health_check"
+      uppercase_operation_id: "GET_HEALTH_CHECK"
+      path: "/health"
+      PATH_ID: "HEALTH"
+      hasPathParams: false
+      HttpMethod: "Get"
+  /queries:
+    post:
+      tags:
+      - "Actions"
+      summary: "Execute an arbitrary query.\n"
+      operationId: "query"
+      parameters:
+      - in: "body"
+        name: "query"
+        description: "For more about the query syntax, please refer to `FIXME: URL`\
+          \ http://repo/queries.g4.\n"
+        required: true
+        schema:
+          type: "string"
+          upperCaseName: "QUERY"
+        refName: null
+        formatString: "\\\"{}\\\""
+        example: "\"query_example\".to_string()"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "QUERY"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "QUERY"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "query"
+      uppercase_operation_id: "QUERY"
+      path: "/queries"
+      PATH_ID: "QUERIES"
+      hasPathParams: false
+      HttpMethod: "Post"
+  /spaces:
+    post:
+      tags:
+      - "Spaces"
+      summary: "Retrieve a list of space definition names.\n"
+      operationId: "post_spaces"
+      parameters:
+      - in: "body"
+        name: "filters"
+        description: "Filter string  to use to select the data.\nFor more about the\
+          \ filter syntax, please refer to `FIXME: URL` http://repo/filters.g4.\n\
+          If **ids_only** is true, then a list of **unique identifiers** is returned,\
+          \ instead of the whole, distinct, objects for the selected objects.\n"
+        required: false
+        schema:
+          $ref: "#/definitions/filters"
+        uppercase_data_type: "FILTERS"
+        refName: "filters"
+        formatString: "{:?}"
+        example: "None"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "POST_SPATIAL_OBJECTS"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "array"
+            items:
+              type: "string"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "POST_SPATIAL_OBJECTS"
+          uppercase_data_type: "VEC<STRING>"
+          producesJson: true
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "post_spaces"
+      uppercase_operation_id: "POST_SPACES"
+      path: "/spaces"
+      PATH_ID: "SPACES"
+      hasPathParams: false
+      HttpMethod: "Post"
+    put:
+      tags:
+      - "Spaces"
+      summary: "Create or update multiple spaces at a time.\n"
+      operationId: "put_spaces"
+      parameters:
+      - in: "body"
+        name: "spaces"
+        required: true
+        schema:
+          $ref: "#/definitions/spaces"
+        uppercase_data_type: "SPACES"
+        refName: "spaces"
+        formatString: "{:?}"
+        example: "???"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "PUT_SPACES"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK\n"
+          x-responseId: "OK_"
+          x-uppercaseResponseId: "OK_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECTS"
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "put_spaces"
+      uppercase_operation_id: "PUT_SPACES"
+      path: "/spaces"
+      PATH_ID: "SPACES"
+      hasPathParams: false
+      HttpMethod: "Put"
+      noClientExample: true
+    delete:
+      tags:
+      - "Spaces"
+      summary: "Delete mulltiple spaces at a time.\nEach reference space can only\
+        \ be removed if and only if there\n  are no spatial objects left referencing\
+        \ it.\n"
+      operationId: "delete_spaces"
+      parameters:
+      - in: "body"
+        name: "spaces"
+        required: true
+        schema:
+          $ref: "#/definitions/spaces_1"
+        uppercase_data_type: "SPACES1"
+        refName: "spaces_1"
+        formatString: "{:?}"
+        example: "???"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "DELETE_SPACES"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK\n"
+          x-responseId: "OK_"
+          x-uppercaseResponseId: "OK_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECTS"
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "delete_spaces"
+      uppercase_operation_id: "DELETE_SPACES"
+      path: "/spaces"
+      PATH_ID: "SPACES"
+      hasPathParams: false
+      HttpMethod: "Delete"
+      noClientExample: true
+    patch:
+      tags:
+      - "Spaces"
+      summary: "Update multiple spaces at a time.\n"
+      operationId: "patch_spaces"
+      parameters:
+      - in: "body"
+        name: "partial_update"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/partial_update"
+        formatString: "{:?}"
+        example: "&Vec::new()"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "PATCH_SPACE"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK\n"
+          x-responseId: "OK_"
+          x-uppercaseResponseId: "OK_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECTS"
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "patch_spaces"
+      uppercase_operation_id: "PATCH_SPACES"
+      path: "/spaces"
+      PATH_ID: "SPACES"
+      hasPathParams: false
+      HttpMethod: "Patch"
+  /spaces/{name}:
+    get:
+      tags:
+      - "Spaces"
+      summary: "Retrieve the space `name`.\n"
+      operationId: "get_space"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the reference space\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      responses:
+        200:
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Space"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "DELETE_SPACE"
+          uppercase_data_type: "SPACE"
+          producesJson: true
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "get_space"
+      uppercase_operation_id: "GET_SPACE"
+      path: "/spaces/:name"
+      PATH_ID: "SPACES_NAME"
+      hasPathParams: true
+      HttpMethod: "Get"
+    put:
+      tags:
+      - "Spaces"
+      summary: "Create or update a space `name` in the database\n"
+      operationId: "put_space"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the reference space\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      - in: "body"
+        name: "spaces"
+        required: true
+        schema:
+          $ref: "#/definitions/Space"
+        uppercase_data_type: "SPACE"
+        refName: "Space"
+        formatString: "{:?}"
+        example: "???"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "PUT_SPACE"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              previous:
+                $ref: "#/definitions/Space"
+              current:
+                $ref: "#/definitions/Space"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "PATCH_SPACE"
+          uppercase_data_type: "INLINERESPONSE200"
+          producesJson: true
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "put_space"
+      uppercase_operation_id: "PUT_SPACE"
+      path: "/spaces/:name"
+      PATH_ID: "SPACES_NAME"
+      hasPathParams: true
+      HttpMethod: "Put"
+      noClientExample: true
+    delete:
+      tags:
+      - "Spaces"
+      summary: "Remove the space `name`. This operation is authorized if and\n  only\
+        \ if there is no references to the space being removed.\n"
+      operationId: "delete_space"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the reference space\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      responses:
+        200:
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Space"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "DELETE_SPACE"
+          uppercase_data_type: "SPACE"
+          producesJson: true
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "delete_space"
+      uppercase_operation_id: "DELETE_SPACE"
+      path: "/spaces/:name"
+      PATH_ID: "SPACES_NAME"
+      hasPathParams: true
+      HttpMethod: "Delete"
+    patch:
+      tags:
+      - "Spaces"
+      summary: "Update the space `name`.\n"
+      operationId: "patch_space"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the reference space\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      - in: "body"
+        name: "partial_update"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/partial_update"
+        formatString: "{:?}"
+        example: "&Vec::new()"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "PATCH_SPACE"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              previous:
+                $ref: "#/definitions/Space"
+              current:
+                $ref: "#/definitions/Space"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "PATCH_SPACE"
+          uppercase_data_type: "INLINERESPONSE200"
+          producesJson: true
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "patch_space"
+      uppercase_operation_id: "PATCH_SPACE"
+      path: "/spaces/:name"
+      PATH_ID: "SPACES_NAME"
+      hasPathParams: true
+      HttpMethod: "Patch"
+  /datasets:
+    post:
+      tags:
+      - "Data Sets"
+      summary: "Retrieve a list of data set names.\n"
+      operationId: "post_datasets"
+      parameters:
+      - in: "body"
+        name: "filters"
+        description: "Filter string  to use to select the data.\nFor more about the\
+          \ filter syntax, please refer to `FIXME: URL` http://repo/filters.g4.\n\
+          If **ids_only** is true, then a list of **unique identifiers** is returned,\
+          \ instead of the whole, distinct, objects for the selected objects.\n"
+        required: false
+        schema:
+          $ref: "#/definitions/filters"
+        uppercase_data_type: "FILTERS"
+        refName: "filters"
+        formatString: "{:?}"
+        example: "None"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "POST_SPATIAL_OBJECTS"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "array"
+            items:
+              type: "string"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "POST_SPATIAL_OBJECTS"
+          uppercase_data_type: "VEC<STRING>"
+          producesJson: true
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "post_datasets"
+      uppercase_operation_id: "POST_DATASETS"
+      path: "/datasets"
+      PATH_ID: "DATASETS"
+      hasPathParams: false
+      HttpMethod: "Post"
+    put:
+      tags:
+      - "Data Sets"
+      summary: "Create or update multiple data sets at a time.\n"
+      operationId: "put_datasets"
+      parameters:
+      - in: "body"
+        name: "datasets"
+        required: true
+        schema:
+          $ref: "#/definitions/datasets"
+        uppercase_data_type: "DATASETS"
+        refName: "datasets"
+        formatString: "{:?}"
+        example: "???"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "PUT_DATASETS"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK\n"
+          x-responseId: "OK_"
+          x-uppercaseResponseId: "OK_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECTS"
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "put_datasets"
+      uppercase_operation_id: "PUT_DATASETS"
+      path: "/datasets"
+      PATH_ID: "DATASETS"
+      hasPathParams: false
+      HttpMethod: "Put"
+      noClientExample: true
+    delete:
+      tags:
+      - "Data Sets"
+      summary: "Delete mulltiple data sets at a time. This also removes all the\n\
+        \  Spatial Objects tied to these datasets.\n"
+      operationId: "delete_datasets"
+      parameters:
+      - in: "body"
+        name: "datasets"
+        required: true
+        schema:
+          $ref: "#/definitions/datasets_1"
+        uppercase_data_type: "DATASETS1"
+        refName: "datasets_1"
+        formatString: "{:?}"
+        example: "???"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "DELETE_DATASETS"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK\n"
+          x-responseId: "OK_"
+          x-uppercaseResponseId: "OK_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECTS"
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "delete_datasets"
+      uppercase_operation_id: "DELETE_DATASETS"
+      path: "/datasets"
+      PATH_ID: "DATASETS"
+      hasPathParams: false
+      HttpMethod: "Delete"
+      noClientExample: true
+    patch:
+      tags:
+      - "Data Sets"
+      summary: "Update multiple data sets at a time.\n"
+      operationId: "patch_datasets"
+      parameters:
+      - in: "body"
+        name: "partial_update"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/partial_update_1"
+        formatString: "{:?}"
+        example: "&Vec::new()"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "PATCH_DATASET"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK\n"
+          x-responseId: "OK_"
+          x-uppercaseResponseId: "OK_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECTS"
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "patch_datasets"
+      uppercase_operation_id: "PATCH_DATASETS"
+      path: "/datasets"
+      PATH_ID: "DATASETS"
+      hasPathParams: false
+      HttpMethod: "Patch"
+  /datasets/{name}:
+    get:
+      tags:
+      - "Data Sets"
+      summary: "Retrieve the data set `name` properties. This does not include\n \
+        \ the SpatialObjects contained in this dataset.\n"
+      operationId: "get_dataset"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the data set\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      responses:
+        200:
+          description: "OK"
+          schema:
+            $ref: "#/definitions/DataSet"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "DELETE_DATASET"
+          uppercase_data_type: "DATASET"
+          producesJson: true
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "get_dataset"
+      uppercase_operation_id: "GET_DATASET"
+      path: "/datasets/:name"
+      PATH_ID: "DATASETS_NAME"
+      hasPathParams: true
+      HttpMethod: "Get"
+    put:
+      tags:
+      - "Data Sets"
+      summary: "Create or update a data set `name` in the database.\n"
+      operationId: "put_dataset"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the data set\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      - in: "body"
+        name: "datasets"
+        required: true
+        schema:
+          $ref: "#/definitions/DataSet"
+        uppercase_data_type: "DATASET"
+        refName: "DataSet"
+        formatString: "{:?}"
+        example: "???"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "PUT_DATASET"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              previous:
+                $ref: "#/definitions/DataSet"
+              current:
+                $ref: "#/definitions/DataSet"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "PATCH_DATASET"
+          uppercase_data_type: "INLINERESPONSE2001"
+          producesJson: true
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "put_dataset"
+      uppercase_operation_id: "PUT_DATASET"
+      path: "/datasets/:name"
+      PATH_ID: "DATASETS_NAME"
+      hasPathParams: true
+      HttpMethod: "Put"
+      noClientExample: true
+    delete:
+      tags:
+      - "Data Sets"
+      summary: "Remove the data set `name`. This also removes all the Spatial\n  Objects\
+        \ stored as part of that data set.\n"
+      operationId: "delete_dataset"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the data set\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      responses:
+        200:
+          description: "OK"
+          schema:
+            $ref: "#/definitions/DataSet"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "DELETE_DATASET"
+          uppercase_data_type: "DATASET"
+          producesJson: true
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "delete_dataset"
+      uppercase_operation_id: "DELETE_DATASET"
+      path: "/datasets/:name"
+      PATH_ID: "DATASETS_NAME"
+      hasPathParams: true
+      HttpMethod: "Delete"
+    patch:
+      tags:
+      - "Data Sets"
+      summary: "Update the properties of the data set `name`.\n"
+      operationId: "patch_dataset"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the data set\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      - in: "body"
+        name: "partial_update"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/partial_update_1"
+        formatString: "{:?}"
+        example: "&Vec::new()"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "PATCH_DATASET"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              previous:
+                $ref: "#/definitions/DataSet"
+              current:
+                $ref: "#/definitions/DataSet"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "PATCH_DATASET"
+          uppercase_data_type: "INLINERESPONSE2001"
+          producesJson: true
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "patch_dataset"
+      uppercase_operation_id: "PATCH_DATASET"
+      path: "/datasets/:name"
+      PATH_ID: "DATASETS_NAME"
+      hasPathParams: true
+      HttpMethod: "Patch"
+  /datasets/{name}/index:
+    put:
+      tags:
+      - "Data Sets"
+      summary: "Rebuild the index of data set `name`.\n"
+      operationId: "put_dataset_index"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the data set\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      responses:
+        200:
+          description: "OK"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "PUT_DATASET_INDEX"
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "put_dataset_index"
+      uppercase_operation_id: "PUT_DATASET_INDEX"
+      path: "/datasets/:name/index"
+      PATH_ID: "DATASETS_NAME_INDEX"
+      hasPathParams: true
+      HttpMethod: "Put"
+  /datasets/{name}/spatial_objects:
+    post:
+      tags:
+      - "Spatial Objects"
+      summary: "Retrieve a list of spatial object.\n"
+      operationId: "post_spatial_objects"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the data set\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      - in: "body"
+        name: "filters"
+        description: "Filter string  to use to select the data.\nFor more about the\
+          \ filter syntax, please refer to `FIXME: URL` http://repo/filters.g4.\n\
+          If **ids_only** is true, then a list of **unique identifiers** is returned,\
+          \ instead of the whole, distinct, objects for the selected objects.\n"
+        required: false
+        schema:
+          $ref: "#/definitions/filters"
+        uppercase_data_type: "FILTERS"
+        refName: "filters"
+        formatString: "{:?}"
+        example: "None"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "POST_SPATIAL_OBJECTS"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "array"
+            items:
+              type: "string"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "POST_SPATIAL_OBJECTS"
+          uppercase_data_type: "VEC<STRING>"
+          producesJson: true
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "post_spatial_objects"
+      uppercase_operation_id: "POST_SPATIAL_OBJECTS"
+      path: "/datasets/:name/spatial_objects"
+      PATH_ID: "DATASETS_NAME_SPATIAL_OBJECTS"
+      hasPathParams: true
+      HttpMethod: "Post"
+    put:
+      tags:
+      - "Spatial Objects"
+      summary: "Create or update multiple spatial objects at a time.\n"
+      operationId: "put_spatial_objects"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the data set\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      - in: "body"
+        name: "spatial_objects"
+        required: true
+        schema:
+          $ref: "#/definitions/spatial_objects"
+        uppercase_data_type: "SPATIALOBJECTS"
+        refName: "spatial_objects"
+        formatString: "{:?}"
+        example: "???"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "PUT_SPATIAL_OBJECTS"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK\n"
+          x-responseId: "OK_"
+          x-uppercaseResponseId: "OK_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECTS"
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "put_spatial_objects"
+      uppercase_operation_id: "PUT_SPATIAL_OBJECTS"
+      path: "/datasets/:name/spatial_objects"
+      PATH_ID: "DATASETS_NAME_SPATIAL_OBJECTS"
+      hasPathParams: true
+      HttpMethod: "Put"
+      noClientExample: true
+    delete:
+      tags:
+      - "Spatial Objects"
+      summary: "Delete mulltiple spatial objects at a time.\n"
+      operationId: "delete_spatial_objects"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the data set\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      - in: "body"
+        name: "spatial_objects"
+        required: true
+        schema:
+          $ref: "#/definitions/spatial_objects_1"
+        uppercase_data_type: "SPATIALOBJECTS1"
+        refName: "spatial_objects_1"
+        formatString: "{:?}"
+        example: "???"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "DELETE_SPATIAL_OBJECTS"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK\n"
+          x-responseId: "OK_"
+          x-uppercaseResponseId: "OK_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECTS"
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "delete_spatial_objects"
+      uppercase_operation_id: "DELETE_SPATIAL_OBJECTS"
+      path: "/datasets/:name/spatial_objects"
+      PATH_ID: "DATASETS_NAME_SPATIAL_OBJECTS"
+      hasPathParams: true
+      HttpMethod: "Delete"
+      noClientExample: true
+    patch:
+      tags:
+      - "Spatial Objects"
+      summary: "Update multiple spatial objects at a time.\n"
+      operationId: "patch_spatial_objects"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the data set\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      - in: "body"
+        name: "partial_update"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/partial_update_2"
+        formatString: "{:?}"
+        example: "&Vec::new()"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK\n"
+          x-responseId: "OK_"
+          x-uppercaseResponseId: "OK_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECTS"
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "patch_spatial_objects"
+      uppercase_operation_id: "PATCH_SPATIAL_OBJECTS"
+      path: "/datasets/:name/spatial_objects"
+      PATH_ID: "DATASETS_NAME_SPATIAL_OBJECTS"
+      hasPathParams: true
+      HttpMethod: "Patch"
+  /datasets/{name}/spatial_objects/{id}:
+    get:
+      tags:
+      - "Spatial Objects"
+      summary: "Retrieve the spatial object `id` of the data set `name`.\n"
+      operationId: "get_spatial_object"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the data set\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      - name: "id"
+        in: "path"
+        description: "Id of the spatial object\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"id_example\".to_string()"
+      responses:
+        200:
+          description: "OK"
+          schema:
+            $ref: "#/definitions/SpatialObject"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "DELETE_SPATIAL_OBJECT"
+          uppercase_data_type: "SPATIALOBJECT"
+          producesJson: true
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "get_spatial_object"
+      uppercase_operation_id: "GET_SPATIAL_OBJECT"
+      path: "/datasets/:name/spatial_objects/:id"
+      PATH_ID: "DATASETS_NAME_SPATIAL_OBJECTS_ID"
+      hasPathParams: true
+      HttpMethod: "Get"
+    put:
+      tags:
+      - "Spatial Objects"
+      summary: "Create or update a spatial object `id` in the data set `name`.\n"
+      operationId: "put_spatial_object"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the data set\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      - name: "id"
+        in: "path"
+        description: "Id of the spatial object\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"id_example\".to_string()"
+      - in: "body"
+        name: "spatial_objects"
+        required: true
+        schema:
+          $ref: "#/definitions/SpatialObject"
+        uppercase_data_type: "SPATIALOBJECT"
+        refName: "SpatialObject"
+        formatString: "{:?}"
+        example: "???"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "PUT_SPATIAL_OBJECT"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              previous:
+                $ref: "#/definitions/SpatialObject"
+              current:
+                $ref: "#/definitions/SpatialObject"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+          uppercase_data_type: "INLINERESPONSE2002"
+          producesJson: true
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "put_spatial_object"
+      uppercase_operation_id: "PUT_SPATIAL_OBJECT"
+      path: "/datasets/:name/spatial_objects/:id"
+      PATH_ID: "DATASETS_NAME_SPATIAL_OBJECTS_ID"
+      hasPathParams: true
+      HttpMethod: "Put"
+      noClientExample: true
+    delete:
+      tags:
+      - "Spatial Objects"
+      summary: "Remove the spatial object `id` of the data set `name`.\n"
+      operationId: "delete_spatial_object"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the data set\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      - name: "id"
+        in: "path"
+        description: "Id of the spatial object\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"id_example\".to_string()"
+      responses:
+        200:
+          description: "OK"
+          schema:
+            $ref: "#/definitions/SpatialObject"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "DELETE_SPATIAL_OBJECT"
+          uppercase_data_type: "SPATIALOBJECT"
+          producesJson: true
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "delete_spatial_object"
+      uppercase_operation_id: "DELETE_SPATIAL_OBJECT"
+      path: "/datasets/:name/spatial_objects/:id"
+      PATH_ID: "DATASETS_NAME_SPATIAL_OBJECTS_ID"
+      hasPathParams: true
+      HttpMethod: "Delete"
+    patch:
+      tags:
+      - "Spatial Objects"
+      summary: "Update the spatial object `id` of the data set `name`.\n"
+      operationId: "patch_spatial_object"
+      parameters:
+      - name: "name"
+        in: "path"
+        description: "Name of the data set\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"name_example\".to_string()"
+      - name: "id"
+        in: "path"
+        description: "Id of the spatial object\n"
+        required: true
+        type: "string"
+        formatString: "\\\"{}\\\""
+        example: "\"id_example\".to_string()"
+      - in: "body"
+        name: "partial_update"
+        required: true
+        schema:
+          type: "array"
+          items:
+            $ref: "#/definitions/partial_update_2"
+        formatString: "{:?}"
+        example: "&Vec::new()"
+        model_key: "Valid numbers on this axis"
+        uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        consumesJson: true
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              previous:
+                $ref: "#/definitions/SpatialObject"
+              current:
+                $ref: "#/definitions/SpatialObject"
+          x-responseId: "OK"
+          x-uppercaseResponseId: "OK"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+          uppercase_data_type: "INLINERESPONSE2002"
+          producesJson: true
+        404:
+          description: "Object not found\n"
+          x-responseId: "ObjectNotFound_"
+          x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        422:
+          description: "Unprocessable Entity\n"
+          x-responseId: "UnprocessableEntity_"
+          x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+        default:
+          description: "Invalid or malformed request\n"
+          x-responseId: "InvalidOrMalformedRequest_"
+          x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+          uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      operation_id: "patch_spatial_object"
+      uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+      path: "/datasets/:name/spatial_objects/:id"
+      PATH_ID: "DATASETS_NAME_SPATIAL_OBJECTS_ID"
+      hasPathParams: true
+      HttpMethod: "Patch"
+definitions:
+  Space:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "Unique Id for the space, which can also be used to generate\
+          \ a\n  link to the user documentation describing the space,\n  explaining\
+          \ the semantic meaning of the values stored, as\n  well as the definitions\
+          \ of the axes.\n"
+      axes:
+        type: "array"
+        description: "The order of the axes matter and MUST be kept, as this is\n\
+          \  also linked to the definition found in the documentation.\n\nCoordinate\
+          \ of a point MUST always be expressed using the\n  same order as defined\
+          \ here.\n"
+        items:
+          $ref: "#/definitions/Axis"
+    title: "Reference Space"
+    description: "Definition of a space, in which objects are described.\n"
+    example:
+      name: "name"
+      axes:
+      - unit_vector:
+        - ""
+        - ""
+        origin:
+        - ""
+        - ""
+        coordinates:
+          set: "N"
+          maximum: 6.0274563
+          minimum: 0.8008282
+          steps: 1.46581298050294517310021547018550336360931396484375
+        measurement_unit: "measurement_unit"
+      - unit_vector:
+        - ""
+        - ""
+        origin:
+        - ""
+        - ""
+        coordinates:
+          set: "N"
+          maximum: 6.0274563
+          minimum: 0.8008282
+          steps: 1.46581298050294517310021547018550336360931396484375
+        measurement_unit: "measurement_unit"
+    upperCaseName: "SPACE"
+  SpatialObject:
+    type: "object"
+    properties:
+      shape:
+        type: "array"
+        description: "List of shapes, overlapping or not, which define the whole space\
+          \ covered by this spatial object.\n"
+        items:
+          $ref: "#/definitions/Shape"
+      properties:
+        $ref: "#/definitions/Properties"
+    title: "Spatial Object"
+    description: "Collection of positions in a space, which share a common set of\n\
+      \  properties.\n"
+    example:
+      shape:
+      - vertices:
+        - ""
+        - ""
+        type: "Point"
+        space: "space"
+      - vertices:
+        - ""
+        - ""
+        type: "Point"
+        space: "space"
+      properties:
+        id: "id"
+        type: "type"
+    upperCaseName: "SPATIALOBJECT"
+  DataSet:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      version:
+        type: "string"
+      scales:
+        type: "array"
+        description: "Scale factors used to generate less precise, coarser indexes\n\
+          \  in order to speed up queries over large volumes of the\n  space.\n\n\
+          Values are expressed as powers of two, in the range [0;n].\n  For each scale,\
+          \ a whole vector providing values for each\n  axis MUST be provided.\n\n\
+          Values, which are equal, and whose coordinates gets merged\n  are merged\
+          \ as well, to reduce the number of results.\n\nDistinct values whose coordinates\
+          \ are merged are recorded,\n  thus allowing the user to move from one scale\
+          \ factor to\n  another, with a finer resolution smoothly.\n"
+        title: "Scale Vectors"
+        items:
+          type: "array"
+          items:
+            type: "number"
+            format: "int32"
+            minimum: 0
+    title: "Data Set"
+    description: "Collection of Spatial Objects, stored in one or more Reference\n\
+      \  Spaces.\n"
+    example:
+      scales:
+      - - 0.080082819046101150206595775671303272247314453125
+        - 0.080082819046101150206595775671303272247314453125
+      - - 0.080082819046101150206595775671303272247314453125
+        - 0.080082819046101150206595775671303272247314453125
+      name: "name"
+      version: "version"
+    upperCaseName: "DATASET"
+  Point:
+    title: "Multi-Dimensional point"
+    type: "array"
+    description: "One valid value for each axes of the reference space this point\n\
+      \  is used in.\n"
+    items:
+      type: "number"
+    upperCaseName: "POINT"
+  Axis:
+    type: "object"
+    properties:
+      measurement_unit:
+        type: "string"
+        description: "Unit of the values, on this axis, for example [mm], [s],\n \
+          \ [um].\n"
+        title: "Unit used on this axis"
+      coordinates:
+        $ref: "#/definitions/Valid numbers on this axis"
+      origin:
+        type: "array"
+        items:
+          $ref: "#/definitions/Point"
+      unit_vector:
+        type: "array"
+        items:
+          $ref: "#/definitions/Point"
+    title: "Coordinate Axis"
+    description: "Defines the properties of an axis. The origin and unit vectors\n\
+      \  or defined within the universe space, but this does NOT imply\n  a linear\
+      \ conversion is possible, this only provide anchoring\n  of the axis as well\
+      \ as its absolute direction.\n"
+    example:
+      unit_vector:
+      - ""
+      - ""
+      origin:
+      - ""
+      - ""
+      coordinates:
+        set: "N"
+        maximum: 6.0274563
+        minimum: 0.8008282
+        steps: 1.46581298050294517310021547018550336360931396484375
+      measurement_unit: "measurement_unit"
+    upperCaseName: "AXIS"
+  Shape:
+    type: "object"
+    properties:
+      type:
+        type: "string"
+        description: "Name of the shape class described by the vertices, this can\n\
+          \  be used for specific types to reduce the number of\n  vertices required\
+          \ to define the shape.\n"
+        enum:
+        - "Point"
+        - "Hyperrectangle"
+      vertices:
+        type: "array"
+        description: "List of vertices composing the contour of the shape.\n"
+        items:
+          $ref: "#/definitions/Point"
+      space:
+        type: "string"
+        description: "Name of a valid reference space. This is the space in which\n\
+          \  the vertices are defined\n"
+    title: "Geometric shape"
+    description: "Geometric shape defined in a reference space.\n"
+    example:
+      vertices:
+      - ""
+      - ""
+      type: "Point"
+      space: "space"
+    upperCaseName: "SHAPE"
+  Properties:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+      type:
+        type: "string"
+        description: "Label defining the kind of the spatial object.\n"
+    description: "Properties tied to a shape, in other words properties valid for\n\
+      \  the whole content of the shape.\n"
+    example:
+      id: "id"
+      type: "type"
+    upperCaseName: "PROPERTIES"
+  spaces:
+    type: "object"
+    properties:
+      list:
+        type: "array"
+        items:
+          $ref: "#/definitions/Space"
+    upperCaseName: "SPACES"
+  filters:
+    type: "object"
+    properties:
+      filter:
+        type: "string"
+      ids_only:
+        type: "boolean"
+        default: false
+    upperCaseName: "FILTERS"
+  spaces_1:
+    type: "object"
+    properties:
+      list:
+        type: "array"
+        items:
+          type: "string"
+    upperCaseName: "SPACES_1"
+  partial_update:
+    properties:
+      name:
+        type: "string"
+        description: "Identifier or name of the instance to update.\n"
+      attribute:
+        type: "string"
+        description: "Valid selector / attribute name of the instance.\n"
+        enum:
+        - "name"
+        - "axes"
+      value:
+        type: "string"
+        description: "JSON-serialized value to use to replace the value of the selected\
+          \ attribute.\n"
+    upperCaseName: "PARTIAL_UPDATE"
+  inline_response_200:
+    properties:
+      previous:
+        $ref: "#/definitions/Space"
+      current:
+        $ref: "#/definitions/Space"
+    example:
+      current:
+        name: "name"
+        axes:
+        - unit_vector:
+          - ""
+          - ""
+          origin:
+          - ""
+          - ""
+          coordinates:
+            set: "N"
+            maximum: 6.0274563
+            minimum: 0.8008282
+            steps: 1.46581298050294517310021547018550336360931396484375
+          measurement_unit: "measurement_unit"
+        - unit_vector:
+          - ""
+          - ""
+          origin:
+          - ""
+          - ""
+          coordinates:
+            set: "N"
+            maximum: 6.0274563
+            minimum: 0.8008282
+            steps: 1.46581298050294517310021547018550336360931396484375
+          measurement_unit: "measurement_unit"
+      previous:
+        name: "name"
+        axes:
+        - unit_vector:
+          - ""
+          - ""
+          origin:
+          - ""
+          - ""
+          coordinates:
+            set: "N"
+            maximum: 6.0274563
+            minimum: 0.8008282
+            steps: 1.46581298050294517310021547018550336360931396484375
+          measurement_unit: "measurement_unit"
+        - unit_vector:
+          - ""
+          - ""
+          origin:
+          - ""
+          - ""
+          coordinates:
+            set: "N"
+            maximum: 6.0274563
+            minimum: 0.8008282
+            steps: 1.46581298050294517310021547018550336360931396484375
+          measurement_unit: "measurement_unit"
+    upperCaseName: "INLINE_RESPONSE_200"
+  datasets:
+    type: "object"
+    properties:
+      list:
+        type: "array"
+        items:
+          $ref: "#/definitions/DataSet"
+    upperCaseName: "DATASETS"
+  datasets_1:
+    type: "object"
+    properties:
+      list:
+        type: "array"
+        items:
+          type: "string"
+    upperCaseName: "DATASETS_1"
+  partial_update_1:
+    properties:
+      name:
+        type: "string"
+        description: "Identifier or name of the instance to update.\n"
+      attribute:
+        type: "string"
+        description: "Valid selector / attribute name of the instance.\n"
+        enum:
+        - "name"
+        - "version"
+        - "scales"
+      value:
+        type: "string"
+        description: "JSON-serialized value to use to replace the value of the selected\
+          \ attribute.\n"
+    upperCaseName: "PARTIAL_UPDATE_1"
+  inline_response_200_1:
+    properties:
+      previous:
+        $ref: "#/definitions/DataSet"
+      current:
+        $ref: "#/definitions/DataSet"
+    example:
+      current:
+        scales:
+        - - 0.080082819046101150206595775671303272247314453125
+          - 0.080082819046101150206595775671303272247314453125
+        - - 0.080082819046101150206595775671303272247314453125
+          - 0.080082819046101150206595775671303272247314453125
+        name: "name"
+        version: "version"
+      previous:
+        scales:
+        - - 0.080082819046101150206595775671303272247314453125
+          - 0.080082819046101150206595775671303272247314453125
+        - - 0.080082819046101150206595775671303272247314453125
+          - 0.080082819046101150206595775671303272247314453125
+        name: "name"
+        version: "version"
+    upperCaseName: "INLINE_RESPONSE_200_1"
+  spatial_objects:
+    type: "object"
+    properties:
+      list:
+        type: "array"
+        items:
+          $ref: "#/definitions/SpatialObject"
+    upperCaseName: "SPATIAL_OBJECTS"
+  spatial_objects_1:
+    type: "object"
+    properties:
+      list:
+        type: "array"
+        items:
+          type: "string"
+    upperCaseName: "SPATIAL_OBJECTS_1"
+  partial_update_2:
+    properties:
+      id:
+        type: "string"
+        description: "Identifier or name of the instance to update.\n"
+      attribute:
+        type: "string"
+        description: "Valid selector / attribute name of the instance.\n"
+        enum:
+        - "shape"
+        - "shape.type"
+        - "shape.vertices"
+        - "shape.space"
+        - "properties"
+        - "properties.id"
+        - "properties.type"
+      value:
+        type: "string"
+        description: "JSON-serialized value to use to replace the value of the selected\
+          \ attribute.\n"
+    upperCaseName: "PARTIAL_UPDATE_2"
+  inline_response_200_2:
+    properties:
+      previous:
+        $ref: "#/definitions/SpatialObject"
+      current:
+        $ref: "#/definitions/SpatialObject"
+    example:
+      current:
+        shape:
+        - vertices:
+          - ""
+          - ""
+          type: "Point"
+          space: "space"
+        - vertices:
+          - ""
+          - ""
+          type: "Point"
+          space: "space"
+        properties:
+          id: "id"
+          type: "type"
+      previous:
+        shape:
+        - vertices:
+          - ""
+          - ""
+          type: "Point"
+          space: "space"
+        - vertices:
+          - ""
+          - ""
+          type: "Point"
+          space: "space"
+        properties:
+          id: "id"
+          type: "type"
+    upperCaseName: "INLINE_RESPONSE_200_2"
+  Valid numbers on this axis:
+    properties:
+      set:
+        type: "string"
+        description: "Valid numbers as defined by the usual mathematical sets,\n for\
+          \ example N=Natural, Z=Integers, Q=Rational, R=Real.\n"
+        enum:
+        - "N"
+        - "Z"
+        - "Q"
+        - "R"
+      minimum:
+        type: "number"
+        format: "float"
+      maximum:
+        type: "number"
+        format: "float"
+      steps:
+        type: "number"
+        format: "integer"
+    description: "Definition of the valid coordinate values which can be used\n  on\
+      \ this axis.\n"
+    example:
+      set: "N"
+      maximum: 6.0274563
+      minimum: 0.8008282
+      steps: 1.46581298050294517310021547018550336360931396484375
+    upperCaseName: "VALID NUMBERS ON THIS AXIS"
+parameters:
+  Space:
+    in: "body"
+    name: "spaces"
+    required: true
+    schema:
+      $ref: "#/definitions/Space"
+    uppercase_data_type: "SPACE"
+    refName: "Space"
+    formatString: "{:?}"
+    example: "???"
+    model_key: "Valid numbers on this axis"
+    uppercase_operation_id: "PUT_SPACE"
+    consumesJson: true
+  Spaces:
+    in: "body"
+    name: "spaces"
+    required: true
+    schema:
+      $ref: "#/definitions/spaces"
+    uppercase_data_type: "SPACES"
+    refName: "spaces"
+    formatString: "{:?}"
+    example: "???"
+    model_key: "Valid numbers on this axis"
+    uppercase_operation_id: "PUT_SPACES"
+    consumesJson: true
+  SpaceName:
+    name: "name"
+    in: "path"
+    description: "Name of the reference space\n"
+    required: true
+    type: "string"
+    formatString: "\\\"{}\\\""
+    example: "\"name_example\".to_string()"
+  SpaceNames:
+    in: "body"
+    name: "spaces"
+    required: true
+    schema:
+      $ref: "#/definitions/spaces_1"
+    uppercase_data_type: "SPACES1"
+    refName: "spaces_1"
+    formatString: "{:?}"
+    example: "???"
+    model_key: "Valid numbers on this axis"
+    uppercase_operation_id: "DELETE_SPACES"
+    consumesJson: true
+  SpacePartial:
+    in: "body"
+    name: "partial_update"
+    required: true
+    schema:
+      type: "array"
+      items:
+        $ref: "#/definitions/partial_update"
+    formatString: "{:?}"
+    example: "&Vec::new()"
+    model_key: "Valid numbers on this axis"
+    uppercase_operation_id: "PATCH_SPACE"
+    consumesJson: true
+  DataSet:
+    in: "body"
+    name: "datasets"
+    required: true
+    schema:
+      $ref: "#/definitions/DataSet"
+    uppercase_data_type: "DATASET"
+    refName: "DataSet"
+    formatString: "{:?}"
+    example: "???"
+    model_key: "Valid numbers on this axis"
+    uppercase_operation_id: "PUT_DATASET"
+    consumesJson: true
+  DataSets:
+    in: "body"
+    name: "datasets"
+    required: true
+    schema:
+      $ref: "#/definitions/datasets"
+    uppercase_data_type: "DATASETS"
+    refName: "datasets"
+    formatString: "{:?}"
+    example: "???"
+    model_key: "Valid numbers on this axis"
+    uppercase_operation_id: "PUT_DATASETS"
+    consumesJson: true
+  DataSetName:
+    name: "name"
+    in: "path"
+    description: "Name of the data set\n"
+    required: true
+    type: "string"
+    formatString: "\\\"{}\\\""
+    example: "\"name_example\".to_string()"
+  DataSetNames:
+    in: "body"
+    name: "datasets"
+    required: true
+    schema:
+      $ref: "#/definitions/datasets_1"
+    uppercase_data_type: "DATASETS1"
+    refName: "datasets_1"
+    formatString: "{:?}"
+    example: "???"
+    model_key: "Valid numbers on this axis"
+    uppercase_operation_id: "DELETE_DATASETS"
+    consumesJson: true
+  DataSetPartial:
+    in: "body"
+    name: "partial_update"
+    required: true
+    schema:
+      type: "array"
+      items:
+        $ref: "#/definitions/partial_update_1"
+    formatString: "{:?}"
+    example: "&Vec::new()"
+    model_key: "Valid numbers on this axis"
+    uppercase_operation_id: "PATCH_DATASET"
+    consumesJson: true
+  SpatialObject:
+    in: "body"
+    name: "spatial_objects"
+    required: true
+    schema:
+      $ref: "#/definitions/SpatialObject"
+    uppercase_data_type: "SPATIALOBJECT"
+    refName: "SpatialObject"
+    formatString: "{:?}"
+    example: "???"
+    model_key: "Valid numbers on this axis"
+    uppercase_operation_id: "PUT_SPATIAL_OBJECT"
+    consumesJson: true
+  SpatialObjects:
+    in: "body"
+    name: "spatial_objects"
+    required: true
+    schema:
+      $ref: "#/definitions/spatial_objects"
+    uppercase_data_type: "SPATIALOBJECTS"
+    refName: "spatial_objects"
+    formatString: "{:?}"
+    example: "???"
+    model_key: "Valid numbers on this axis"
+    uppercase_operation_id: "PUT_SPATIAL_OBJECTS"
+    consumesJson: true
+  SpatialObjectId:
+    name: "id"
+    in: "path"
+    description: "Id of the spatial object\n"
+    required: true
+    type: "string"
+    formatString: "\\\"{}\\\""
+    example: "\"id_example\".to_string()"
+  SpatialObjectIds:
+    in: "body"
+    name: "spatial_objects"
+    required: true
+    schema:
+      $ref: "#/definitions/spatial_objects_1"
+    uppercase_data_type: "SPATIALOBJECTS1"
+    refName: "spatial_objects_1"
+    formatString: "{:?}"
+    example: "???"
+    model_key: "Valid numbers on this axis"
+    uppercase_operation_id: "DELETE_SPATIAL_OBJECTS"
+    consumesJson: true
+  SpatialObjectPartial:
+    in: "body"
+    name: "partial_update"
+    required: true
+    schema:
+      type: "array"
+      items:
+        $ref: "#/definitions/partial_update_2"
+    formatString: "{:?}"
+    example: "&Vec::new()"
+    model_key: "Valid numbers on this axis"
+    uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+    consumesJson: true
+  Filters:
+    in: "body"
+    name: "filters"
+    description: "Filter string  to use to select the data.\nFor more about the filter\
+      \ syntax, please refer to `FIXME: URL` http://repo/filters.g4.\nIf **ids_only**\
+      \ is true, then a list of **unique identifiers** is returned, instead of the\
+      \ whole, distinct, objects for the selected objects.\n"
+    required: false
+    schema:
+      $ref: "#/definitions/filters"
+    uppercase_data_type: "FILTERS"
+    refName: "filters"
+    formatString: "{:?}"
+    example: "None"
+    model_key: "Valid numbers on this axis"
+    uppercase_operation_id: "POST_SPATIAL_OBJECTS"
+    consumesJson: true
+  Query:
+    in: "body"
+    name: "query"
+    description: "For more about the query syntax, please refer to `FIXME: URL` http://repo/queries.g4.\n"
+    required: true
+    schema:
+      type: "string"
+      upperCaseName: "QUERY"
+    refName: null
+    formatString: "\\\"{}\\\""
+    example: "\"query_example\".to_string()"
+    model_key: "Valid numbers on this axis"
+    uppercase_operation_id: "QUERY"
+    consumesJson: true
+responses:
+  Space200:
+    description: "OK"
+    schema:
+      $ref: "#/definitions/Space"
+    x-responseId: "OK"
+    x-uppercaseResponseId: "OK"
+    uppercase_operation_id: "DELETE_SPACE"
+    uppercase_data_type: "SPACE"
+    producesJson: true
+  SpaceUpdated200:
+    description: "OK"
+    schema:
+      type: "object"
+      properties:
+        previous:
+          $ref: "#/definitions/Space"
+        current:
+          $ref: "#/definitions/Space"
+    x-responseId: "OK"
+    x-uppercaseResponseId: "OK"
+    uppercase_operation_id: "PATCH_SPACE"
+    uppercase_data_type: "INLINERESPONSE200"
+    producesJson: true
+  SpatialObject200:
+    description: "OK"
+    schema:
+      $ref: "#/definitions/SpatialObject"
+    x-responseId: "OK"
+    x-uppercaseResponseId: "OK"
+    uppercase_operation_id: "DELETE_SPATIAL_OBJECT"
+    uppercase_data_type: "SPATIALOBJECT"
+    producesJson: true
+  SpatialObjectUpdated200:
+    description: "OK"
+    schema:
+      type: "object"
+      properties:
+        previous:
+          $ref: "#/definitions/SpatialObject"
+        current:
+          $ref: "#/definitions/SpatialObject"
+    x-responseId: "OK"
+    x-uppercaseResponseId: "OK"
+    uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+    uppercase_data_type: "INLINERESPONSE2002"
+    producesJson: true
+  DataSet200:
+    description: "OK"
+    schema:
+      $ref: "#/definitions/DataSet"
+    x-responseId: "OK"
+    x-uppercaseResponseId: "OK"
+    uppercase_operation_id: "DELETE_DATASET"
+    uppercase_data_type: "DATASET"
+    producesJson: true
+  DataSetUpdated200:
+    description: "OK"
+    schema:
+      type: "object"
+      properties:
+        previous:
+          $ref: "#/definitions/DataSet"
+        current:
+          $ref: "#/definitions/DataSet"
+    x-responseId: "OK"
+    x-uppercaseResponseId: "OK"
+    uppercase_operation_id: "PATCH_DATASET"
+    uppercase_data_type: "INLINERESPONSE2001"
+    producesJson: true
+  Query200:
+    description: "OK"
+    x-responseId: "OK"
+    x-uppercaseResponseId: "OK"
+    uppercase_operation_id: "QUERY"
+  ArrayOfStrings:
+    description: "OK"
+    schema:
+      type: "array"
+      items:
+        type: "string"
+    x-responseId: "OK"
+    x-uppercaseResponseId: "OK"
+    uppercase_operation_id: "POST_SPATIAL_OBJECTS"
+    uppercase_data_type: "VEC<STRING>"
+    producesJson: true
+  Standard422:
+    description: "Unprocessable Entity\n"
+    x-responseId: "UnprocessableEntity_"
+    x-uppercaseResponseId: "UNPROCESSABLE_ENTITY_"
+    uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+  Standard404:
+    description: "Object not found\n"
+    x-responseId: "ObjectNotFound_"
+    x-uppercaseResponseId: "OBJECT_NOT_FOUND_"
+    uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+  Standard400:
+    description: "Invalid or malformed request\n"
+    x-responseId: "InvalidOrMalformedRequest_"
+    x-uppercaseResponseId: "INVALID_OR_MALFORMED_REQUEST_"
+    uppercase_operation_id: "PATCH_SPATIAL_OBJECT"
+  Standard200:
+    description: "OK\n"
+    x-responseId: "OK_"
+    x-uppercaseResponseId: "OK_"
+    uppercase_operation_id: "PATCH_SPATIAL_OBJECTS"

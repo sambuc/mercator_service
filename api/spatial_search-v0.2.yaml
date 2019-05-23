@@ -1,0 +1,935 @@
+swagger: "2.0"
+info:
+  title: Spatial Search Backend API Documentation
+  description: API Documentation for the spatial search backend.
+  termsOfService: "" #urn:tos FIXME: Describe ToS?
+  contact: {}
+  license:
+    name: The MIT License
+    url: https://opensource.org/licenses/MIT
+  version: "0.2"
+
+tags:
+- name: Actions
+  description: General Database actions.
+- name: Spaces
+  description: Operations on Reference Spaces.
+- name: Data Sets
+  description: Operations on Data Sets.
+- name: Spatial Objects
+  description: Operations on Spatial Objects.
+
+paths:
+  #--------------------------------------------------------------------
+  # GENERAL ACTIONS ON THE SYSTEM
+  #--------------------------------------------------------------------
+  /health:
+    get:
+      tags: [Actions]
+      summary: >
+        Health check of the service.
+      description: >
+        Please note that making anything but a **GET** call is a bad request.
+      operationId: get_health_check
+      responses:
+        '200':
+          $ref: '#/responses/Standard200'
+        default:
+          $ref: '#/responses/Standard400'
+
+  /queries:
+    post:
+      tags: [Actions]
+      summary: >
+        Execute an arbitrary query.
+      #description: >
+      #  This is a POST operation, as it "creates" and execute a query, and it is not idempotent as the same query re-run multiple times might have different results, depending on the state of the database.
+      operationId: query
+      parameters:
+        - $ref: '#/parameters/Query'
+      responses:
+        '200':
+          $ref: '#/responses/Query200'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+
+  #--------------------------------------------------------------------
+  # SPACES QUERIES
+  #--------------------------------------------------------------------
+  /spaces:
+
+    post:
+      tags: [Spaces]
+      summary: >
+        Retrieve a list of space definition names.
+      operationId: post_spaces
+      parameters:
+        - $ref: '#/parameters/Filters'
+      responses:
+        '200':
+          $ref: '#/responses/ArrayOfStrings'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+
+    put:
+      tags: [Spaces]
+      summary: >
+        Create or update multiple spaces at a time.
+      operationId: put_spaces
+      parameters:
+        - $ref: '#/parameters/Spaces'
+      responses:
+        '200':
+          $ref: '#/responses/Standard200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+    patch:
+      tags: [Spaces]
+      summary: >
+        Update multiple spaces at a time.
+      operationId: patch_spaces
+      parameters:
+        - $ref: '#/parameters/SpacePartial'
+      responses:
+        '200':
+          $ref: '#/responses/Standard200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+    delete:
+      tags: [Spaces]
+      summary: >
+        Delete mulltiple spaces at a time.
+
+        Each reference space can only be removed if and only if there
+          are no spatial objects left referencing it.
+      operationId: delete_spaces
+      parameters:
+        - $ref: '#/parameters/SpaceNames'
+      responses:
+        '200':
+          $ref: '#/responses/Standard200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+
+  /spaces/{name}:
+    parameters:
+      - $ref: '#/parameters/SpaceName'
+
+    put:
+      tags: [Spaces]
+      summary: >
+        Create or update a space `name` in the database
+      operationId: put_space
+      parameters:
+         - $ref: '#/parameters/Space'
+      responses:
+        '200':
+          $ref: '#/responses/SpaceUpdated200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+    patch:
+      tags: [Spaces]
+      summary: >
+        Update the space `name`.
+      operationId: patch_space
+      parameters:
+         - $ref: '#/parameters/SpacePartial'
+      responses:
+        '200':
+          $ref: '#/responses/SpaceUpdated200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+    get:
+      tags: [Spaces]
+      summary: >
+        Retrieve the space `name`.
+      operationId: get_space
+      responses:
+        '200':
+          $ref: '#/responses/Space200'
+        '404':
+          $ref: '#/responses/Standard404'
+        default:
+          $ref: '#/responses/Standard400'
+    delete:
+      tags: [Spaces]
+      summary: >
+        Remove the space `name`. This operation is authorized if and
+          only if there is no references to the space being removed.
+      operationId: delete_space
+      responses:
+        '200':
+          $ref: '#/responses/Space200'
+        '404':
+          $ref: '#/responses/Standard404'
+        default:
+          $ref: '#/responses/Standard400'
+
+  #--------------------------------------------------------------------
+  # DATASETS QUERIES
+  #--------------------------------------------------------------------
+  /datasets:
+
+    post:
+      tags: [Data Sets]
+      summary: >
+        Retrieve a list of data set names.
+      operationId: post_datasets
+      parameters:
+        - $ref: '#/parameters/Filters'
+      responses:
+        '200':
+          $ref: '#/responses/ArrayOfStrings'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+
+    put:
+      tags: [Data Sets]
+      summary: >
+        Create or update multiple data sets at a time.
+      operationId: put_datasets
+      parameters:
+        - $ref: '#/parameters/DataSets'
+      responses:
+        '200':
+          $ref: '#/responses/Standard200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+    patch:
+      tags: [Data Sets]
+      summary: >
+        Update multiple data sets at a time.
+      operationId: patch_datasets
+      parameters:
+        - $ref: '#/parameters/DataSetPartial'
+      responses:
+        '200':
+          $ref: '#/responses/Standard200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+    delete:
+      tags: [Data Sets]
+      summary: >
+        Delete mulltiple data sets at a time. This also removes all the
+          Spatial Objects tied to these datasets.
+      operationId: delete_datasets
+      parameters:
+        - $ref: '#/parameters/DataSetNames'
+      responses:
+        '200':
+          $ref: '#/responses/Standard200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+
+  /datasets/{name}:
+    parameters:
+      - $ref: '#/parameters/DataSetName'
+
+    put:
+      tags: [Data Sets]
+      summary: >
+        Create or update a data set `name` in the database.
+      operationId: put_dataset
+      parameters:
+        - $ref: '#/parameters/DataSet'
+      responses:
+        '200':
+          $ref: '#/responses/DataSetUpdated200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+    patch:
+      tags: [Data Sets]
+      summary: >
+        Update the properties of the data set `name`.
+      operationId: patch_dataset
+      parameters:
+        - $ref: '#/parameters/DataSetPartial'
+      responses:
+        '200':
+          $ref: '#/responses/DataSetUpdated200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+    get:
+      tags: [Data Sets]
+      summary: >
+        Retrieve the data set `name` properties. This does not include
+          the SpatialObjects contained in this dataset.
+      operationId: get_dataset
+      responses:
+        '200':
+          $ref: '#/responses/DataSet200'
+        '404':
+          $ref: '#/responses/Standard404'
+        default:
+          $ref: '#/responses/Standard400'
+    delete:
+      tags: [Data Sets]
+      summary: >
+        Remove the data set `name`. This also removes all the Spatial
+          Objects stored as part of that data set.
+      operationId: delete_dataset
+      responses:
+        '200':
+          $ref: '#/responses/DataSet200'
+        '404':
+          $ref: '#/responses/Standard404'
+        default:
+          $ref: '#/responses/Standard400'
+
+  /datasets/{name}/index:
+    parameters:
+      - $ref: '#/parameters/DataSetName'
+
+    put:
+      tags: [Data Sets]
+      summary: >
+        Rebuild the index of data set `name`.
+      operationId: put_dataset_index
+      responses:
+        '200':
+          description: OK
+        '404':
+          $ref: '#/responses/Standard404'
+        default:
+          $ref: '#/responses/Standard400'
+
+  #--------------------------------------------------------------------
+  # SPATIAL_OBJECTS QUERIES
+  #--------------------------------------------------------------------
+  /datasets/{name}/spatial_objects:
+    parameters:
+      - $ref: '#/parameters/DataSetName'
+
+    post:
+      tags: [Spatial Objects]
+      summary: >
+        Retrieve a list of spatial object.
+      operationId: post_spatial_objects
+      parameters:
+        - $ref: '#/parameters/Filters'
+      responses:
+        '200':
+          $ref: '#/responses/ArrayOfStrings'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+
+    put:
+      tags: [Spatial Objects]
+      summary: >
+        Create or update multiple spatial objects at a time.
+      operationId: put_spatial_objects
+      parameters:
+        - $ref: '#/parameters/SpatialObjects'
+      responses:
+        '200':
+          $ref: '#/responses/Standard200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+    patch:
+      tags: [Spatial Objects]
+      summary: >
+        Update multiple spatial objects at a time.
+      operationId: patch_spatial_objects
+      parameters:
+        - $ref: '#/parameters/SpatialObjectPartial'
+      responses:
+        '200':
+          $ref: '#/responses/Standard200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+    delete:
+      tags: [Spatial Objects]
+      summary: >
+        Delete mulltiple spatial objects at a time.
+      operationId: delete_spatial_objects
+      parameters:
+        - $ref: '#/parameters/SpatialObjectIds'
+      responses:
+        '200':
+          $ref: '#/responses/Standard200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+
+  /datasets/{name}/spatial_objects/{id}:
+    parameters:
+      - $ref: '#/parameters/DataSetName'
+      - $ref: '#/parameters/SpatialObjectId'
+
+    put:
+      tags: [Spatial Objects]
+      summary: >
+        Create or update a spatial object `id` in the data set `name`.
+      operationId: put_spatial_object
+      parameters:
+        - $ref: '#/parameters/SpatialObject'
+      responses:
+        '200':
+          $ref: '#/responses/SpatialObjectUpdated200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+    patch:
+      tags: [Spatial Objects]
+      summary: >
+        Update the spatial object `id` of the data set `name`.
+      operationId: patch_spatial_object
+      parameters:
+        - $ref: '#/parameters/SpatialObjectPartial'
+      responses:
+        '200':
+          $ref: '#/responses/SpatialObjectUpdated200'
+        '404':
+          $ref: '#/responses/Standard404'
+        '422':
+          $ref: '#/responses/Standard422'
+        default:
+          $ref: '#/responses/Standard400'
+    get:
+      tags: [Spatial Objects]
+      summary: >
+        Retrieve the spatial object `id` of the data set `name`.
+      operationId: get_spatial_object
+      responses:
+        '200':
+          $ref: '#/responses/SpatialObject200'
+        '404':
+          $ref: '#/responses/Standard404'
+        default:
+          $ref: '#/responses/Standard400'
+    delete:
+      tags: [Spatial Objects]
+      summary: >
+        Remove the spatial object `id` of the data set `name`.
+      operationId: delete_spatial_object
+      responses:
+        '200':
+          $ref: '#/responses/SpatialObject200'
+        '404':
+          $ref: '#/responses/Standard404'
+        default:
+          $ref: '#/responses/Standard400'
+
+parameters:
+  Space:
+    name: spaces
+    in: body
+    required: true
+    schema:
+      $ref: '#/definitions/Space'
+  Spaces:
+    name: spaces
+    in: body
+    required: true
+    schema:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/definitions/Space'
+  SpaceName:
+    name: name
+    in: path
+    required: true
+    description: >
+      Name of the reference space
+    type: string
+  SpaceNames:
+    name: spaces
+    in: body
+    required: true
+    schema:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            type: string
+  SpacePartial:
+    name: partial_update
+    in: body
+    required: true
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          name:
+            description: >
+              Identifier or name of the instance to update.
+            type: string
+          attribute:
+            description: >
+              Valid selector / attribute name of the instance.
+            type: string
+            enum:
+             - "name"
+             - "axes"
+          value:
+            description: >
+              JSON-serialized value to use to replace the value of the selected attribute.
+            type: string
+
+  DataSet:
+    name: datasets
+    in: body
+    required: true
+    schema:
+      $ref: '#/definitions/DataSet'
+  DataSets:
+    name: datasets
+    in: body
+    required: true
+    schema:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/definitions/DataSet'
+  DataSetName:
+    name: name
+    in: path
+    required: true
+    description: >
+      Name of the data set
+    type: string
+  DataSetNames:
+    name: datasets
+    in: body
+    required: true
+    schema:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            type: string
+  DataSetPartial:
+    name: partial_update
+    in: body
+    required: true
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          name:
+            description: >
+              Identifier or name of the instance to update.
+            type: string
+          attribute:
+            description: >
+              Valid selector / attribute name of the instance.
+            type: string
+            enum:
+             - "name"
+             - "version"
+             - "scales"
+          value:
+            description: >
+              JSON-serialized value to use to replace the value of the selected attribute.
+            type: string
+
+  SpatialObject:
+    name: spatial_objects
+    in: body
+    required: true
+    schema:
+      $ref: '#/definitions/SpatialObject'
+  SpatialObjects:
+    name: spatial_objects
+    in: body
+    required: true
+    schema:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/definitions/SpatialObject'
+  SpatialObjectId:
+    name: id
+    in: path
+    required: true
+    description: >
+      Id of the spatial object
+    type: string
+  SpatialObjectIds:
+    name: spatial_objects
+    in: body
+    required: true
+    schema:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            type: string
+  SpatialObjectPartial:
+    name: partial_update
+    in: body
+    required: true
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            description: >
+              Identifier or name of the instance to update.
+            type: string
+          attribute:
+            description: >
+              Valid selector / attribute name of the instance.
+            type: string
+            enum:
+             - "shape"
+             - "shape.type"
+             - "shape.vertices"
+             - "shape.space"
+             - "properties"
+             - "properties.id"
+             - "properties.type"
+          value:
+            description: >
+              JSON-serialized value to use to replace the value of the selected attribute.
+            type: string
+
+  Filters:
+    name: filters
+    in: body
+    description: >
+      Filter string  to use to select the data.
+
+      For more about the filter syntax, please refer to `FIXME: URL` http://repo/filters.g4.
+
+      If **ids_only** is true, then a list of **unique identifiers** is returned, instead of the whole, distinct, objects for the selected objects.
+    schema:
+      type: object
+      properties:
+        filter:
+          type: string
+        ids_only:
+          type: boolean
+          default: false
+
+  Query:
+    name: query
+    in: body
+    required: true
+    description: >
+      For more about the query syntax, please refer to `FIXME: URL` http://repo/queries.g4.
+    schema:
+      type: string
+
+responses:
+  Space200:
+    description: OK
+    schema:
+      $ref: '#/definitions/Space'
+  SpaceUpdated200:
+    description: OK
+    schema:
+      type: object
+      properties:
+        previous:
+          $ref: '#/definitions/Space'
+        current:
+          $ref: '#/definitions/Space'
+
+  SpatialObject200:
+    description: OK
+    schema:
+      $ref: '#/definitions/SpatialObject'
+  SpatialObjectUpdated200:
+    description: OK
+    schema:
+      type: object
+      properties:
+        previous:
+          $ref: '#/definitions/SpatialObject'
+        current:
+          $ref: '#/definitions/SpatialObject'
+
+  DataSet200:
+    description: OK
+    schema:
+      $ref: '#/definitions/DataSet'
+  DataSetUpdated200:
+    description: OK
+    schema:
+      type: object
+      properties:
+        previous:
+          $ref: '#/definitions/DataSet'
+        current:
+          $ref: '#/definitions/DataSet'
+
+  Query200:
+    description: OK
+
+  ArrayOfStrings:
+    description: OK
+    schema:
+      type: array
+      items:
+        type: string
+
+  Standard422:
+    description: >
+      Unprocessable Entity
+  Standard404:
+    description: >
+      Object not found
+  Standard400:
+    description: >
+      Invalid or malformed request
+
+  Standard200:
+    description: >
+      OK
+
+definitions:
+  #--------------------------------------------------------------------
+  # Types returned / accepted by the API
+  #--------------------------------------------------------------------
+  Space:
+    title: Reference Space
+    description: >
+      Definition of a space, in which objects are described.
+    type: object
+    properties:
+      name:
+        description: >
+          Unique Id for the space, which can also be used to generate a
+            link to the user documentation describing the space,
+            explaining the semantic meaning of the values stored, as
+            well as the definitions of the axes.
+        type: string
+      axes:
+        description: >
+          The order of the axes matter and MUST be kept, as this is
+            also linked to the definition found in the documentation.
+
+          Coordinate of a point MUST always be expressed using the
+            same order as defined here.
+        type: array
+        items:
+          $ref: '#/definitions/Axis'
+
+  SpatialObject:
+    title: Spatial Object
+    description: >
+      Collection of positions in a space, which share a common set of
+        properties.
+    type: object
+    properties:
+      shape:
+        description: >
+          List of shapes, overlapping or not, which define the whole
+          space covered by this spatial object.
+        type: array
+        items:
+          $ref: '#/definitions/Shape'
+      properties:
+        $ref: '#/definitions/Properties'
+
+  DataSet:
+    title: Data Set
+    description: >
+      Collection of Spatial Objects, stored in one or more Reference
+        Spaces.
+    type: object
+    properties:
+      name:
+        type: string
+      version:
+        type: string
+      scales:
+        title: Scale Vectors
+        description: >
+          Scale factors used to generate less precise, coarser indexes
+            in order to speed up queries over large volumes of the
+            space.
+
+          Values are expressed as powers of two, in the range [0;n].
+            For each scale, a whole vector providing values for each
+            axis MUST be provided.
+
+          Values, which are equal, and whose coordinates gets merged
+            are merged as well, to reduce the number of results.
+
+          Distinct values whose coordinates are merged are recorded,
+            thus allowing the user to move from one scale factor to
+            another, with a finer resolution smoothly.
+        type: array
+        items:
+          type: array
+          items:
+            type: number
+            minimum: 0
+            format: int32
+
+  #--------------------------------------------------------------------
+  # Helper types
+  #--------------------------------------------------------------------
+  Point:
+    title: Multi-Dimensional point
+    description: >
+      One valid value for each axes of the reference space this point
+        is used in.
+    type: array
+    items:
+      type: number
+
+  Axis:
+    title: Coordinate Axis
+    description: >
+      Defines the properties of an axis. The origin and unit vectors
+        or defined within the universe space, but this does NOT imply
+        a linear conversion is possible, this only provide anchoring
+        of the axis as well as its absolute direction.
+    type: object
+    properties:
+      measurement_unit:
+        title: Unit used on this axis
+        description: >
+          Unit of the values, on this axis, for example [mm], [s],
+            [um].
+        type: string
+      coordinates:
+        title: Valid numbers on this axis
+        description: >
+          Definition of the valid coordinate values which can be used
+            on this axis.
+        type: object
+        properties:
+          set:
+            description: >
+              Valid numbers as defined by the usual mathematical sets,
+               for example N=Natural, Z=Integers, Q=Rational, R=Real.
+            type: string
+            # Decision: For now we leave it at strictly numbers, no
+            #           categories until actually needed.
+            enum: [N, Z, Q, R]
+          minimum:
+            type: number
+            format: float
+          maximum:
+            type: number
+            format: float
+          steps:
+            type: number
+            format: integer
+      origin:
+        type: array
+        items:
+          # Expressed in the universe / common coordinate system
+          $ref: '#/definitions/Point'
+      unit_vector:
+          # Expressed in the universe / common coordinate system
+        type: array
+        items:
+          $ref: '#/definitions/Point'
+
+  Shape:
+    title: Geometric shape
+    description: >
+      Geometric shape defined in a reference space.
+    type: object
+    properties:
+      type:
+        description: >
+          Name of the shape class described by the vertices, this can
+            be used for specific types to reduce the number of
+            vertices required to define the shape.
+        type: string
+        enum: [Point, Hyperrectangle]
+      vertices:
+        description: >
+          List of vertices composing the contour of the shape.
+        type: array
+        items:
+          $ref: '#/definitions/Point'
+      space:
+        description: >
+          Name of a valid reference space. This is the space in which
+            the vertices are defined
+        type: string
+
+  Properties:
+    description: >
+      Properties tied to a shape, in other words properties valid for
+        the whole content of the shape.
+    type: object
+    properties:
+      id:
+        type: string
+      type:
+        description: >
+          Label defining the kind of the spatial object.
+        type: string
