@@ -34,8 +34,8 @@ pub fn delete((_path, _state): (Path<String>, HttpRequest<AppState>)) -> Result<
 mod tests {
     use super::super::tests::*;
 
-    const INSTANCE_EXISTS: &str = "/datasets/42";
-    const INSTANCE_INVALID: &str = "/datasets/21";
+    const INSTANCE_EXISTS: &str = "/cores/42";
+    const INSTANCE_INVALID: &str = "/cores/21";
 
     // FIXME: Add Body to request to see difference between (in)valid bodied requests
 

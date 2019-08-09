@@ -14,8 +14,8 @@ tags:
   description: General Database actions.
 - name: Spaces
   description: Operations on Reference Spaces.
-- name: Data Sets
-  description: Operations on Data Sets.
+- name: Cores
+  description: Operations on Cores.
 - name: Spatial Objects
   description: Operations on Spatial Objects.
 
@@ -190,15 +190,15 @@ paths:
           $ref: '#/responses/Standard400'
 
   #--------------------------------------------------------------------
-  # DATASETS QUERIES
+  # CORE QUERIES
   #--------------------------------------------------------------------
-  /datasets:
+  /cores:
 
     post:
-      tags: [Data Sets]
+      tags: [Cores]
       summary: >
-        Retrieve a list of data set names.
-      operationId: post_datasets
+        Retrieve a list of core names.
+      operationId: post_cores
       parameters:
         - $ref: '#/parameters/Filters'
       responses:
@@ -210,12 +210,12 @@ paths:
           $ref: '#/responses/Standard400'
 
     put:
-      tags: [Data Sets]
+      tags: [Cores]
       summary: >
-        Create or update multiple data sets at a time.
-      operationId: put_datasets
+        Create or update multiple Cores at a time.
+      operationId: put_cores
       parameters:
-        - $ref: '#/parameters/DataSets'
+        - $ref: '#/parameters/Cores'
       responses:
         '200':
           $ref: '#/responses/Standard200'
@@ -226,12 +226,12 @@ paths:
         default:
           $ref: '#/responses/Standard400'
     patch:
-      tags: [Data Sets]
+      tags: [Cores]
       summary: >
-        Update multiple data sets at a time.
-      operationId: patch_datasets
+        Update multiple Cores at a time.
+      operationId: patch_cores
       parameters:
-        - $ref: '#/parameters/DataSetPartial'
+        - $ref: '#/parameters/CorePartial'
       responses:
         '200':
           $ref: '#/responses/Standard200'
@@ -242,13 +242,13 @@ paths:
         default:
           $ref: '#/responses/Standard400'
     delete:
-      tags: [Data Sets]
+      tags: [Cores]
       summary: >
-        Delete mulltiple data sets at a time. This also removes all the
-          Spatial Objects tied to these datasets.
-      operationId: delete_datasets
+        Delete mulltiple Cores at a time. This also removes all the
+          Spatial Objects tied to these cores.
+      operationId: delete_cores
       parameters:
-        - $ref: '#/parameters/DataSetNames'
+        - $ref: '#/parameters/CoreNames'
       responses:
         '200':
           $ref: '#/responses/Standard200'
@@ -259,20 +259,20 @@ paths:
         default:
           $ref: '#/responses/Standard400'
 
-  /datasets/{name}:
+  /cores/{name}:
     parameters:
-      - $ref: '#/parameters/DataSetName'
+      - $ref: '#/parameters/CoreName'
 
     put:
-      tags: [Data Sets]
+      tags: [Cores]
       summary: >
-        Create or update a data set `name` in the database.
-      operationId: put_dataset
+        Create or update a core `name` in the database.
+      operationId: put_Core
       parameters:
-        - $ref: '#/parameters/DataSet'
+        - $ref: '#/parameters/Core'
       responses:
         '200':
-          $ref: '#/responses/DataSetUpdated200'
+          $ref: '#/responses/CoreUpdated200'
         '404':
           $ref: '#/responses/Standard404'
         '422':
@@ -280,15 +280,15 @@ paths:
         default:
           $ref: '#/responses/Standard400'
     patch:
-      tags: [Data Sets]
+      tags: [Cores]
       summary: >
-        Update the properties of the data set `name`.
-      operationId: patch_dataset
+        Update the properties of the core `name`.
+      operationId: patch_Core
       parameters:
-        - $ref: '#/parameters/DataSetPartial'
+        - $ref: '#/parameters/CorePartial'
       responses:
         '200':
-          $ref: '#/responses/DataSetUpdated200'
+          $ref: '#/responses/CoreUpdated200'
         '404':
           $ref: '#/responses/Standard404'
         '422':
@@ -296,41 +296,41 @@ paths:
         default:
           $ref: '#/responses/Standard400'
     get:
-      tags: [Data Sets]
+      tags: [Cores]
       summary: >
-        Retrieve the data set `name` properties. This does not include
-          the SpatialObjects contained in this dataset.
-      operationId: get_dataset
+        Retrieve the core `name` properties. This does not include
+          the SpatialObjects contained in this Core.
+      operationId: get_Core
       responses:
         '200':
-          $ref: '#/responses/DataSet200'
+          $ref: '#/responses/Core200'
         '404':
           $ref: '#/responses/Standard404'
         default:
           $ref: '#/responses/Standard400'
     delete:
-      tags: [Data Sets]
+      tags: [Cores]
       summary: >
-        Remove the data set `name`. This also removes all the Spatial
-          Objects stored as part of that data set.
-      operationId: delete_dataset
+        Remove the core `name`. This also removes all the Spatial
+          Objects stored as part of that core.
+      operationId: delete_Core
       responses:
         '200':
-          $ref: '#/responses/DataSet200'
+          $ref: '#/responses/Core200'
         '404':
           $ref: '#/responses/Standard404'
         default:
           $ref: '#/responses/Standard400'
 
-  /datasets/{name}/index:
+  /cores/{name}/index:
     parameters:
-      - $ref: '#/parameters/DataSetName'
+      - $ref: '#/parameters/CoreName'
 
     put:
-      tags: [Data Sets]
+      tags: [Cores]
       summary: >
-        Rebuild the index of data set `name`.
-      operationId: put_dataset_index
+        Rebuild the index of core `name`.
+      operationId: put_Core_index
       responses:
         '200':
           description: OK
@@ -342,9 +342,9 @@ paths:
   #--------------------------------------------------------------------
   # SPATIAL_OBJECTS QUERIES
   #--------------------------------------------------------------------
-  /datasets/{name}/spatial_objects:
+  /cores/{name}/spatial_objects:
     parameters:
-      - $ref: '#/parameters/DataSetName'
+      - $ref: '#/parameters/CoreName'
 
     post:
       tags: [Spatial Objects]
@@ -410,15 +410,15 @@ paths:
         default:
           $ref: '#/responses/Standard400'
 
-  /datasets/{name}/spatial_objects/{id}:
+  /cores/{name}/spatial_objects/{id}:
     parameters:
-      - $ref: '#/parameters/DataSetName'
+      - $ref: '#/parameters/CoreName'
       - $ref: '#/parameters/SpatialObjectId'
 
     put:
       tags: [Spatial Objects]
       summary: >
-        Create or update a spatial object `id` in the data set `name`.
+        Create or update a spatial object `id` in the core `name`.
       operationId: put_spatial_object
       parameters:
         - $ref: '#/parameters/SpatialObject'
@@ -434,7 +434,7 @@ paths:
     patch:
       tags: [Spatial Objects]
       summary: >
-        Update the spatial object `id` of the data set `name`.
+        Update the spatial object `id` of the core `name`.
       operationId: patch_spatial_object
       parameters:
         - $ref: '#/parameters/SpatialObjectPartial'
@@ -450,7 +450,7 @@ paths:
     get:
       tags: [Spatial Objects]
       summary: >
-        Retrieve the spatial object `id` of the data set `name`.
+        Retrieve the spatial object `id` of the core `name`.
       operationId: get_spatial_object
       responses:
         '200':
@@ -462,7 +462,7 @@ paths:
     delete:
       tags: [Spatial Objects]
       summary: >
-        Remove the spatial object `id` of the data set `name`.
+        Remove the spatial object `id` of the core `name`.
       operationId: delete_spatial_object
       responses:
         '200':
@@ -533,14 +533,14 @@ parameters:
               JSON-serialized value to use to replace the value of the selected attribute.
             type: string
 
-  DataSet:
-    name: datasets
+  Core:
+    name: cores
     in: body
     required: true
     schema:
-      $ref: '#/definitions/DataSet'
-  DataSets:
-    name: datasets
+      $ref: '#/definitions/Core'
+  Cores:
+    name: cores
     in: body
     required: true
     schema:
@@ -549,16 +549,16 @@ parameters:
         list:
           type: array
           items:
-            $ref: '#/definitions/DataSet'
-  DataSetName:
+            $ref: '#/definitions/Core'
+  CoreName:
     name: name
     in: path
     required: true
     description: >
-      Name of the data set
+      Name of the core
     type: string
-  DataSetNames:
-    name: datasets
+  CoreNames:
+    name: cores
     in: body
     required: true
     schema:
@@ -568,7 +568,7 @@ parameters:
           type: array
           items:
             type: string
-  DataSetPartial:
+  CorePartial:
     name: partial_update
     in: body
     required: true
@@ -715,19 +715,19 @@ responses:
         current:
           $ref: '#/definitions/SpatialObject'
 
-  DataSet200:
+  Core200:
     description: OK
     schema:
-      $ref: '#/definitions/DataSet'
-  DataSetUpdated200:
+      $ref: '#/definitions/Core'
+  CoreUpdated200:
     description: OK
     schema:
       type: object
       properties:
         previous:
-          $ref: '#/definitions/DataSet'
+          $ref: '#/definitions/Core'
         current:
-          $ref: '#/definitions/DataSet'
+          $ref: '#/definitions/Core'
 
   Query200:
     description: OK
@@ -798,8 +798,8 @@ definitions:
       properties:
         $ref: '#/definitions/Properties'
 
-  DataSet:
-    title: Data Set
+  Core:
+    title: Core
     description: >
       Collection of Spatial Objects, stored in one or more Reference
         Spaces.
@@ -908,7 +908,7 @@ definitions:
             be used for specific types to reduce the number of
             vertices required to define the shape.
         type: string
-        enum: [Point, Hyperrectangle]
+        enum: [Point, Hyperrectangle, Hypersphere]
       vertices:
         description: >
           List of vertices composing the contour of the shape.

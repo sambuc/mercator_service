@@ -33,7 +33,7 @@ pub fn delete(_state: &HttpRequest<AppState>) -> Result<fs::NamedFile> {
 mod tests {
     use super::super::tests::*;
 
-    const COLLECTION: &str = "/datasets";
+    const COLLECTION: &str = "/cores";
 
     // FIXME: Add Body to request to see difference between (in)valid bodied requests
 

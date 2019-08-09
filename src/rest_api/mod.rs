@@ -33,8 +33,8 @@ mod actions;
 mod space;
 mod spaces;
 
-mod dataset;
-mod datasets;
+mod core;
+mod cores;
 
 mod spatial_object;
 mod spatial_objects;
@@ -75,26 +75,26 @@ fn get_app(
                 r.method(Method::DELETE).with(space::delete);
             })
             // DATASETS          -------------------------------------------------------------------
-            .resource("/datasets", |r| {
-                r.method(Method::POST).f(&datasets::post);
-                r.method(Method::PUT).f(&datasets::put);
-                r.method(Method::PATCH).f(&datasets::patch);
-                r.method(Method::DELETE).f(&datasets::delete);
+            .resource("/cores", |r| {
+                r.method(Method::POST).f(&cores::post);
+                r.method(Method::PUT).f(&cores::put);
+                r.method(Method::PATCH).f(&cores::patch);
+                r.method(Method::DELETE).f(&cores::delete);
             })
-            .resource("/datasets/{name}", |r| {
-                r.method(Method::PUT).with(dataset::put);
-                r.method(Method::GET).with(dataset::get);
-                r.method(Method::PATCH).with(dataset::patch);
-                r.method(Method::DELETE).with(dataset::delete);
+            .resource("/cores/{name}", |r| {
+                r.method(Method::PUT).with(core::put);
+                r.method(Method::GET).with(core::get);
+                r.method(Method::PATCH).with(core::patch);
+                r.method(Method::DELETE).with(core::delete);
             })
             // SPATIAL OBJECTS   -------------------------------------------------------------------
-            .resource("/dataset/{name}/spatial_objects", |r| {
+            .resource("/core/{name}/spatial_objects", |r| {
                 r.method(Method::POST).with(spatial_objects::post);
                 r.method(Method::PUT).with(spatial_objects::put);
                 r.method(Method::PATCH).with(spatial_objects::patch);
                 r.method(Method::DELETE).with(spatial_objects::delete);
             })
-            .resource("/dataset/{name}/spatial_objects/{id}", |r| {
+            .resource("/core/{name}/spatial_objects/{id}", |r| {
                 r.method(Method::PUT).with(spatial_object::put);
                 r.method(Method::GET).with(spatial_object::get);
                 r.method(Method::PATCH).with(spatial_object::patch);
