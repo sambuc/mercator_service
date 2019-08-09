@@ -41,13 +41,24 @@ mod spatial_objects;
 
 mod default;
 
-fn get_app(
-    prefix: &'static str,
+// From: https://stackoverflow.com/a/52367953
+fn into_static<S>(s: S) -> &'static str
+where
+    S: Into<String>,
+{
+    Box::leak(s.into().into_boxed_str())
+}
+
+fn get_app<S>(
+    prefix: S,
     state: Arc<RwLock<SharedState>>,
-) -> Vec<Box<HttpHandler<Task = Box<HttpHandlerTask>>>> {
+) -> Vec<Box<HttpHandler<Task = Box<HttpHandlerTask>>>>
+where
+    S: Into<String>,
+{
     vec![
         App::with_state(AppState { shared: state })
-            .prefix(format!("{}", prefix))
+            .prefix(format!("{}", into_static(prefix)))
             // ACTIONS           -------------------------------------------------------------------
             .resource("/health", |r| {
                 r.method(Method::GET).f(actions::health);
@@ -119,15 +130,15 @@ fn get_app(
     ]
 }
 
-pub fn run(
-    host: &'static str,
-    port: u16,
-    prefix: &'static str,
-    state: Arc<RwLock<SharedState>>,
-) -> () {
+pub fn run<S>(host: S, port: u16, prefix: S, state: Arc<RwLock<SharedState>>) -> ()
+where
+    S: Into<String>,
+{
     info!("Initializing server...");
 
     let sys = actix::System::new("spatial-search");
+    let prefix = into_static(prefix);
+    let host = host.into();
 
     server::new(move || get_app(prefix, state.clone()))
         .bind(format!("{}:{}", host, port))
