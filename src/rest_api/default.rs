@@ -1,19 +1,21 @@
 use super::AppState;
 
+use actix_web::fs;
 use actix_web::http::StatusCode;
-use actix_web::{fs, HttpRequest, Result};
+use actix_web::HttpRequest;
+use actix_web::Result;
 
 pub fn page_400(_req: &HttpRequest<AppState>) -> Result<fs::NamedFile> {
-    info!("Default 400 Triggered!");
+    trace!("400 Triggered!");
     Ok(fs::NamedFile::open("static/400.html")?.set_status_code(StatusCode::BAD_REQUEST))
 }
 
 pub fn page_400_no_state(_req: &HttpRequest) -> Result<fs::NamedFile> {
-    info!("Default 400 Triggered!");
+    trace!("400 Triggered!");
     Ok(fs::NamedFile::open("static/400.html")?.set_status_code(StatusCode::BAD_REQUEST))
 }
 pub fn page_404(_req: &HttpRequest) -> Result<fs::NamedFile> {
-    info!("Default 404 (no state) Triggered!");
+    trace!("404 Triggered!");
     Ok(fs::NamedFile::open("static/404.html")?.set_status_code(StatusCode::NOT_FOUND))
 }
 

@@ -1,15 +1,17 @@
-use super::AppState;
+use actix_web::HttpRequest;
+use actix_web::HttpResponse;
 
-use actix_web::http::StatusCode;
-use actix_web::{fs, HttpRequest, HttpResponse, Path, Result};
+use super::error_400;
+use super::AppState;
+use super::StringOrStaticFileResult;
 
 pub fn health(_req: &HttpRequest<AppState>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
-pub fn query(_req: &HttpRequest<AppState>) -> Result<fs::NamedFile> {
-    info!("query Triggered!");
-    Ok(fs::NamedFile::open("static/400.html")?.set_status_code(StatusCode::BAD_REQUEST))
+pub fn query(_req: &HttpRequest<AppState>) -> StringOrStaticFileResult {
+    trace!("query Triggered!");
+    error_400()
 }
 
 #[cfg(test)]

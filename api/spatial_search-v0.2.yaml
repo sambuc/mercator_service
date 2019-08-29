@@ -9,15 +9,20 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "0.2"
 
+host: 127.0.0.1:8888
+basePath: /spatial-search
+schemes:
+  - http
+
 tags:
-- name: Actions
-  description: General Database actions.
-- name: Spaces
-  description: Operations on Reference Spaces.
-- name: Cores
-  description: Operations on Cores.
-- name: Spatial Objects
-  description: Operations on Spatial Objects.
+  - name: Actions
+    description: General Database actions.
+  - name: Spaces
+    description: Operations on Reference Spaces.
+  - name: Cores
+    description: Operations on Cores.
+  - name: Spatial Objects
+    description: Operations on Spatial Objects.
 
 paths:
   #--------------------------------------------------------------------
@@ -65,8 +70,8 @@ paths:
       summary: >
         Retrieve a list of space definition names.
       operationId: post_spaces
-      parameters:
-        - $ref: '#/parameters/Filters'
+      #      parameters:
+      #        - $ref: '#/parameters/Filters'
       responses:
         '200':
           $ref: '#/responses/ArrayOfStrings'
@@ -137,7 +142,7 @@ paths:
         Create or update a space `name` in the database
       operationId: put_space
       parameters:
-         - $ref: '#/parameters/Space'
+        - $ref: '#/parameters/Space'
       responses:
         '200':
           $ref: '#/responses/SpaceUpdated200'
@@ -153,7 +158,7 @@ paths:
         Update the space `name`.
       operationId: patch_space
       parameters:
-         - $ref: '#/parameters/SpacePartial'
+        - $ref: '#/parameters/SpacePartial'
       responses:
         '200':
           $ref: '#/responses/SpaceUpdated200'
@@ -199,8 +204,8 @@ paths:
       summary: >
         Retrieve a list of core names.
       operationId: post_cores
-      parameters:
-        - $ref: '#/parameters/Filters'
+      #      parameters:
+      #        - $ref: '#/parameters/Filters'
       responses:
         '200':
           $ref: '#/responses/ArrayOfStrings'
@@ -351,8 +356,8 @@ paths:
       summary: >
         Retrieve a list of spatial object.
       operationId: post_spatial_objects
-      parameters:
-        - $ref: '#/parameters/Filters'
+      #      parameters:
+      #        - $ref: '#/parameters/Filters'
       responses:
         '200':
           $ref: '#/responses/ArrayOfStrings'
@@ -526,8 +531,8 @@ parameters:
               Valid selector / attribute name of the instance.
             type: string
             enum:
-             - "name"
-             - "axes"
+              - "name"
+              - "axes"
           value:
             description: >
               JSON-serialized value to use to replace the value of the selected attribute.
@@ -586,9 +591,9 @@ parameters:
               Valid selector / attribute name of the instance.
             type: string
             enum:
-             - "name"
-             - "version"
-             - "scales"
+              - "name"
+              - "version"
+              - "scales"
           value:
             description: >
               JSON-serialized value to use to replace the value of the selected attribute.
@@ -647,13 +652,13 @@ parameters:
               Valid selector / attribute name of the instance.
             type: string
             enum:
-             - "shape"
-             - "shape.type"
-             - "shape.vertices"
-             - "shape.space"
-             - "properties"
-             - "properties.id"
-             - "properties.type"
+              - "shape"
+              - "shape.type"
+              - "shape.vertices"
+              - "shape.space"
+              - "properties"
+              - "properties.id"
+              - "properties.type"
           value:
             description: >
               JSON-serialized value to use to replace the value of the selected attribute.
@@ -770,6 +775,11 @@ definitions:
             explaining the semantic meaning of the values stored, as
             well as the definitions of the axes.
         type: string
+      origin:
+        type: array
+        items:
+          # Expressed in the universe / common coordinate system
+          $ref: '#/definitions/Point'
       axes:
         description: >
           The order of the axes matter and MUST be kept, as this is
@@ -788,15 +798,15 @@ definitions:
         properties.
     type: object
     properties:
-      shape:
+      properties:
+        $ref: '#/definitions/Properties'
+      shapes:
         description: >
           List of shapes, overlapping or not, which define the whole
           space covered by this spatial object.
         type: array
         items:
           $ref: '#/definitions/Shape'
-      properties:
-        $ref: '#/definitions/Properties'
 
   Core:
     title: Core
@@ -861,7 +871,7 @@ definitions:
           Unit of the values, on this axis, for example [mm], [s],
             [um].
         type: string
-      coordinates:
+      graduation:
         title: Valid numbers on this axis
         description: >
           Definition of the valid coordinate values which can be used
@@ -885,13 +895,8 @@ definitions:
           steps:
             type: number
             format: integer
-      origin:
-        type: array
-        items:
-          # Expressed in the universe / common coordinate system
-          $ref: '#/definitions/Point'
       unit_vector:
-          # Expressed in the universe / common coordinate system
+        # Expressed in the universe / common coordinate system
         type: array
         items:
           $ref: '#/definitions/Point'
@@ -909,17 +914,17 @@ definitions:
             vertices required to define the shape.
         type: string
         enum: [Point, Hyperrectangle, Hypersphere]
+      space:
+        description: >
+          Name of a valid reference space. This is the space in which
+            the vertices are defined
+        type: string
       vertices:
         description: >
           List of vertices composing the contour of the shape.
         type: array
         items:
           $ref: '#/definitions/Point'
-      space:
-        description: >
-          Name of a valid reference space. This is the space in which
-            the vertices are defined
-        type: string
 
   Properties:
     description: >
@@ -927,9 +932,9 @@ definitions:
         the whole content of the shape.
     type: object
     properties:
-      id:
-        type: string
       type:
         description: >
           Label defining the kind of the spatial object.
+        type: string
+      id:
         type: string

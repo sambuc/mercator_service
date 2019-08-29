@@ -1,4 +1,10 @@
-.*
-!.gitignore
 /target
 **/*.rs.bk
+.DS_Store
+.*
+*~
+1*k.*
+test*
+test*
+
+!.gitignore

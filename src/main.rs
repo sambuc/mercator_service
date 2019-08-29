@@ -1,23 +1,32 @@
 // WebService framework
 //#![cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
-extern crate actix;
-extern crate actix_web;
+//extern crate actix;
+//extern crate actix_web;
 
-// Logging & Console output.
 #[macro_use]
-extern crate log;
+extern crate measure_time;
+
+#[macro_use]
+extern crate serde_derive;
+
+mod model;
+mod rest_api;
+mod storage;
 
 use std::process::exit;
 use std::sync::Arc;
 use std::sync::RwLock;
 
-mod rest_api;
+use mercator_db::DataBase;
+
+pub type SharedState = DataBase;
 
 /*
 fn into_bool(string: &str) -> bool {
     string.eq_ignore_ascii_case("true") || string.eq_ignore_ascii_case("on")
 }
 */
+
 fn main() {
     // If RUST_LOG is unset, set it to INFO, otherwise keep it as-is.
     if std::env::var("RUST_LOG").is_err() {
@@ -36,14 +45,16 @@ fn main() {
     if std::env::var("MERCATOR_BASE").is_err() {
         std::env::set_var("MERCATOR_BASE", "/spatial-search");
     }
-
+    /* UNUSED FOR NOW
     if std::env::var("MERCATOR_DATA").is_err() {
         std::env::set_var("MERCATOR_DATA", ".");
     }
+    */
+
     let hostname;
     let port;
     let base;
-    let data;
+    //let data;
 
     match std::env::var("MERCATOR_HOST") {
         Ok(val) => hostname = val,
@@ -75,13 +86,68 @@ fn main() {
         }
     };
 
+    /* UNUSED FOR NOW
     match std::env::var("MERCATOR_DATA") {
         Ok(val) => data = val,
         Err(val) => {
             error!("Could not fetch {} : `{}`", "MERCATOR_DATA", val);
             exit(1);
         }
-    };
+    };*/
 
-    rest_api::run(hostname, port, base, Arc::new(RwLock::new(0)));
+    let db;
+    {
+        // Temporary, until data ingestion can be done through the REST API.
+        let import;
+
+        if std::env::var("MERCATOR_IMPORT_DATA").is_err() {
+            std::env::set_var("MERCATOR_IMPORT_DATA", "test_data");
+        }
+
+        match std::env::var("MERCATOR_IMPORT_DATA") {
+            Ok(val) => import = val,
+            Err(val) => {
+                error!("Could not fetch {} : `{}`", "MERCATOR_IMPORT_DATA", val);
+                exit(1);
+            }
+        };
+
+        // Convert to binary the JSON data:
+        if true {
+            info_time!("Converting to binary JSON data");
+            storage::convert(&import);
+        }
+
+        // Build a Database Index:
+        if true {
+            info_time!("Building database index");
+            storage::build(&import);
+        }
+
+        // Load a Database:
+        {
+            info_time!("Loading database index");
+            db = DataBase::load(&import).unwrap();
+        }
+        /*
+        let core = db.core(&import).unwrap();
+
+        let space = db.space("std").unwrap();
+        let lower = space.encode(&[0.2, 0.2, 0.2]).unwrap();
+        let higher = space.encode(&[0.8, 0.8, 0.8]).unwrap();
+
+        let shape = Shape::BoundingBox(lower.clone(), higher.clone());
+        let r;
+        {
+            info_time!("Query by box {:?} - {:?}", lower, higher);
+            r = core.get_by_shape(&shape, 0.0).unwrap();
+        }
+
+        println!("get_by_shape {:?}: {}", shape, r.len());
+        println!("{:?}: {:?}\n", shape, r[0]);
+        */
+        // END of Temporary bloc
+    }
+
+    rest_api::run(hostname, port, base, Arc::new(RwLock::new(db)));
 }

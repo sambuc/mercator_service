@@ -1,32 +1,36 @@
+use actix_web::HttpRequest;
+
+use super::error_400;
+use super::ok_200;
 use super::AppState;
+use super::StringOrStaticFileResult;
 
-use actix_web::http::StatusCode;
-use actix_web::{fs, HttpRequest, Path, Result};
+pub fn post(state: &HttpRequest<AppState>) -> StringOrStaticFileResult {
+    trace!("POST Triggered!");
+    let db = state.state().shared.read().unwrap();
 
-pub fn post(_req: &HttpRequest<AppState>) -> Result<fs::NamedFile> {
-    info!("POST Triggered!");
-    Ok(fs::NamedFile::open("static/400.html")?.set_status_code(StatusCode::BAD_REQUEST))
+    ok_200(db.space_keys())
 }
 
-pub fn put(_state: &HttpRequest<AppState>) -> Result<fs::NamedFile> {
-    info!("PUT Triggered!");
-    Ok(fs::NamedFile::open("static/400.html")?.set_status_code(StatusCode::BAD_REQUEST))
+pub fn put(_state: &HttpRequest<AppState>) -> StringOrStaticFileResult {
+    trace!("PUT Triggered!");
+    error_400()
 }
 
 /*
-pub fn get(_state: &HttpRequest<AppState>) -> Result<fs::NamedFile> {
-    info!("GET Triggered!");
-    Ok(fs::NamedFile::open("static/400.html")?.set_status_code(StatusCode::BAD_REQUEST))
+pub fn get(_state: &HttpRequest<AppState>) -> StringOrStaticFileResult {
+    trace!("GET Triggered!");
+    error_400()
 }*/
 
-pub fn patch(_state: &HttpRequest<AppState>) -> Result<fs::NamedFile> {
-    info!("PATCH Triggered!");
-    Ok(fs::NamedFile::open("static/400.html")?.set_status_code(StatusCode::BAD_REQUEST))
+pub fn patch(_state: &HttpRequest<AppState>) -> StringOrStaticFileResult {
+    trace!("PATCH Triggered!");
+    error_400()
 }
 
-pub fn delete(_state: &HttpRequest<AppState>) -> Result<fs::NamedFile> {
-    info!("DELETE Triggered!");
-    Ok(fs::NamedFile::open("static/400.html")?.set_status_code(StatusCode::BAD_REQUEST))
+pub fn delete(_state: &HttpRequest<AppState>) -> StringOrStaticFileResult {
+    trace!("DELETE Triggered!");
+    error_400()
 }
 
 #[cfg(test)]

@@ -1,16 +1,38 @@
 [package]
-name = "service_test"
+name = "mercator_service"
 version = "0.1.0"
-authors = ["Lionel Sambuc <lionel.sambuc@epfl.ch>"]
+authors = ["EPFL-DIAS", "Lionel Sambuc <lionel.sambuc@epfl.ch>"]
+
 edition = "2018"
 
-[dependencies]
-# Framework Web
-#futures = "0.1"
+description = "Mercator Spatial Index service"
+#homepage = "https://crates.io/crates/mercator_service"
+repository = "https://github.com/epfl-dias/mercator_service"
+readme = "README.md"
 
-actix = "0.7"
-actix-web = "0.7"
+keywords = []
+categories = ["database-implementations", "data-structures"]
+
+license = "MIT"
+#license-file = "LICENSE"
+
+include = ["Cargo.toml", "README.md", "LICENSE", "ACKNOWLEDGEMENTS", "src/**/*.rs"]
+
+[dependencies]
+mercator_db = "^0.1"
+#mercator_parser = "^0.1"
+
+actix = "^0.7"
+actix-web = "^0.7"
+
+measure_time = "^0.6"
+memmap = "^0.7"
+
+serde = "^1.0"
+serde_derive = "^1.0"
+serde_json = "^1.0"
+bincode = "^1.1"
 
 # Logging macros API
-log = { version = "0.4", features = ["max_level_trace", "release_max_level_info"] }
-pretty_env_logger = "0.3"	# Logger implementation
+log = { version = "^0.4", features = ["max_level_trace", "release_max_level_info"] }
+pretty_env_logger = "^0.3" # Logger implementation

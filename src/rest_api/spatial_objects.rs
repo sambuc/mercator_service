@@ -1,40 +1,54 @@
+use actix_web::HttpRequest;
+use actix_web::Path;
+
+use super::error_400;
+use super::error_404;
+use super::ok_200;
 use super::AppState;
+use super::StringOrStaticFileResult;
 
-use actix_web::http::StatusCode;
-use actix_web::{fs, HttpRequest, Path, Result};
+pub fn post((core, state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+    trace!("POST Triggered!");
+    let core = core.to_string();
+    let db = state.state().shared.read().unwrap();
 
-pub fn post((_path, _state): (Path<String>, HttpRequest<AppState>)) -> Result<fs::NamedFile> {
-    info!("POST Triggered!");
-    Ok(fs::NamedFile::open("static/400.html")?.set_status_code(StatusCode::BAD_REQUEST))
+    match db.core(core) {
+        Ok(core) => {
+            // Generate a list of oid.
+            let v: Vec<&String> = core.keys().iter().map(|o| o.id()).collect();
+
+            ok_200(&v)
+        }
+        Err(_) => error_404(),
+    }
 }
 
-pub fn put((_path, _state): (Path<String>, HttpRequest<AppState>)) -> Result<fs::NamedFile> {
-    info!("PUT Triggered!");
-    Ok(fs::NamedFile::open("static/400.html")?.set_status_code(StatusCode::BAD_REQUEST))
+pub fn put((_path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+    trace!("PUT Triggered!");
+    error_400()
 }
 
 /*
-pub fn get((_path, _state): (Path<String>, HttpRequest<AppState>)) -> Result<fs::NamedFile> {
-    info!("GET Triggered!");
-    Ok(fs::NamedFile::open("static/400.html")?.set_status_code(StatusCode::BAD_REQUEST))
-}
+pub fn get((_path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+    trace!("GET Triggered!");
+    error400()
 */
 
-pub fn patch((_path, _state): (Path<String>, HttpRequest<AppState>)) -> Result<fs::NamedFile> {
-    info!("PATCH Triggered!");
-    Ok(fs::NamedFile::open("static/400.html")?.set_status_code(StatusCode::BAD_REQUEST))
+pub fn patch((_path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+    trace!("PATCH Triggered!");
+    error_400()
 }
 
-pub fn delete((_path, _state): (Path<String>, HttpRequest<AppState>)) -> Result<fs::NamedFile> {
-    info!("DELETE Triggered!");
-    Ok(fs::NamedFile::open("static/400.html")?.set_status_code(StatusCode::BAD_REQUEST))
+pub fn delete((_path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+    trace!("DELETE Triggered!");
+    error_400()
 }
 
 #[cfg(test)]
 mod tests {
     use super::super::tests::*;
 
-    const COLLECTION: &str = "/datasets/42/spatial_objects";
+    const COLLECTION: &str = "/cores/42/spatial_objects";
 
     // FIXME: Add Body to request to see difference between (in)valid bodied requests
 

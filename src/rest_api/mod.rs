@@ -1,11 +1,32 @@
+mod actions;
+
+mod space;
+mod spaces;
+
+mod core;
+mod cores;
+
+mod spatial_object;
+mod spatial_objects;
+
+mod default;
+
 use std::sync::Arc;
 use std::sync::RwLock;
 
+use actix_web::fs;
 use actix_web::http::Method;
-use actix_web::server::{HttpHandler, HttpHandlerTask};
-use actix_web::{pred, server, App};
+use actix_web::http::StatusCode;
+use actix_web::middleware;
+use actix_web::pred;
+use actix_web::server;
+use actix_web::server::HttpHandler;
+use actix_web::server::HttpHandlerTask;
+use actix_web::App;
+use actix_web::Either;
+use serde::Serialize;
 
-pub type SharedState = i32;
+use crate::SharedState;
 
 // Application shared state
 pub struct AppState {
@@ -28,18 +49,33 @@ fn index(req: &HttpRequest<AppState>) -> HttpResponse {
 }
 */
 
-mod actions;
+type StringOrStaticFileResult = Either<String, fs::NamedFile>;
 
-mod space;
-mod spaces;
+pub fn ok_200<T>(data: &T) -> StringOrStaticFileResult
+where
+    T: Serialize,
+{
+    Either::A(
+        serde_json::to_string_pretty(data)
+            .unwrap_or_else(|e| format!("Internal Error 500: {:?}", e)),
+    )
+}
 
-mod core;
-mod cores;
+pub fn error_400() -> StringOrStaticFileResult {
+    Either::B(
+        fs::NamedFile::open("static/400.html")
+            .unwrap()
+            .set_status_code(StatusCode::BAD_REQUEST),
+    )
+}
 
-mod spatial_object;
-mod spatial_objects;
-
-mod default;
+pub fn error_404() -> StringOrStaticFileResult {
+    Either::B(
+        fs::NamedFile::open("static/404.html")
+            .unwrap()
+            .set_status_code(StatusCode::NOT_FOUND),
+    )
+}
 
 // From: https://stackoverflow.com/a/52367953
 fn into_static<S>(s: S) -> &'static str
@@ -58,7 +94,10 @@ where
 {
     vec![
         App::with_state(AppState { shared: state })
-            .prefix(format!("{}", into_static(prefix)))
+            .middleware(
+                middleware::DefaultHeaders::new().header("Access-Control-Allow-Origin", "*"),
+            )
+            .prefix(into_static(prefix).to_string())
             // ACTIONS           -------------------------------------------------------------------
             .resource("/health", |r| {
                 r.method(Method::GET).f(actions::health);
@@ -99,13 +138,13 @@ where
                 r.method(Method::DELETE).with(core::delete);
             })
             // SPATIAL OBJECTS   -------------------------------------------------------------------
-            .resource("/core/{name}/spatial_objects", |r| {
+            .resource("/cores/{name}/spatial_objects", |r| {
                 r.method(Method::POST).with(spatial_objects::post);
                 r.method(Method::PUT).with(spatial_objects::put);
                 r.method(Method::PATCH).with(spatial_objects::patch);
                 r.method(Method::DELETE).with(spatial_objects::delete);
             })
-            .resource("/core/{name}/spatial_objects/{id}", |r| {
+            .resource("/cores/{name}/spatial_objects/{id}", |r| {
                 r.method(Method::PUT).with(spatial_object::put);
                 r.method(Method::GET).with(spatial_object::get);
                 r.method(Method::PATCH).with(spatial_object::patch);
@@ -130,7 +169,7 @@ where
     ]
 }
 
-pub fn run<S>(host: S, port: u16, prefix: S, state: Arc<RwLock<SharedState>>) -> ()
+pub fn run<S>(host: S, port: u16, prefix: S, state: Arc<RwLock<SharedState>>)
 where
     S: Into<String>,
 {
@@ -233,6 +272,5 @@ mod tests {
             let response = srv.execute(req.send()).unwrap();
             assert_eq!(http::StatusCode::UNPROCESSABLE_ENTITY, response.status());
         }
-
     }
 }
