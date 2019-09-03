@@ -156,6 +156,9 @@ where
             })
             .boxed(),
         App::new()
+            .resource("/static/{file}", |r| {
+                r.method(Method::GET).with(default::static_file)
+            })
             .default_resource(|r| {
                 // 404 for GET request
                 r.method(Method::GET).f(default::page_404);

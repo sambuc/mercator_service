@@ -3,6 +3,7 @@ use super::AppState;
 use actix_web::fs;
 use actix_web::http::StatusCode;
 use actix_web::HttpRequest;
+use actix_web::Path;
 use actix_web::Result;
 
 pub fn page_400(_req: &HttpRequest<AppState>) -> Result<fs::NamedFile> {
@@ -17,6 +18,17 @@ pub fn page_400_no_state(_req: &HttpRequest) -> Result<fs::NamedFile> {
 pub fn page_404(_req: &HttpRequest) -> Result<fs::NamedFile> {
     trace!("404 Triggered!");
     Ok(fs::NamedFile::open("static/404.html")?.set_status_code(StatusCode::NOT_FOUND))
+}
+
+pub fn static_file((path, _req): (Path<String>, HttpRequest)) -> Result<fs::NamedFile> {
+    trace!("static/{} Triggered!", path);
+
+    match fs::NamedFile::open(format!("static/{}", path).as_str()) {
+        Ok(o) => Ok(o),
+        Err(_) => {
+            Ok(fs::NamedFile::open("static/404.html")?.set_status_code(StatusCode::NOT_FOUND))
+        }
+    }
 }
 
 #[cfg(test)]
