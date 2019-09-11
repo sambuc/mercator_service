@@ -15,9 +15,10 @@ use std::sync::Arc;
 use std::sync::RwLock;
 
 use actix_web::fs;
+use actix_web::http;
 use actix_web::http::Method;
 use actix_web::http::StatusCode;
-use actix_web::middleware;
+use actix_web::middleware::cors::Cors;
 use actix_web::pred;
 use actix_web::server;
 use actix_web::server::HttpHandler;
@@ -87,6 +88,7 @@ where
 
 fn get_app<S>(
     prefix: S,
+    allowed_origins: &[&'static str],
     state: Arc<RwLock<SharedState>>,
 ) -> Vec<Box<HttpHandler<Task = Box<HttpHandlerTask>>>>
 where
@@ -94,9 +96,6 @@ where
 {
     vec![
         App::with_state(AppState { shared: state })
-            .middleware(
-                middleware::DefaultHeaders::new().header("Access-Control-Allow-Origin", "*"),
-            )
             .prefix(into_static(prefix).to_string())
             .middleware(middleware::Logger::new(
                 r#"%a "%r" %s %b "%{Referer}i" "%{User-Agent}i" %T[s] %D[ms]"#,
@@ -108,54 +107,66 @@ where
                     .filter(pred::Not(pred::Get()))
                     .f(default::page_400);
             })
-            .resource("/queries", |r| {
-                r.method(Method::POST).f(actions::query);
-                r.route()
-                    .filter(pred::Not(pred::Post()))
-                    .f(default::page_400);
-            })
-            // SPACES            -------------------------------------------------------------------
-            .resource("/spaces", |r| {
-                r.method(Method::POST).f(spaces::post);
-                r.method(Method::PUT).f(spaces::put);
-                r.method(Method::PATCH).f(spaces::patch);
-                r.method(Method::DELETE).f(spaces::delete);
-            })
-            .resource("/spaces/{name}", |r| {
-                r.method(Method::PUT).with(space::put);
-                r.method(Method::PATCH).with(space::patch);
-                r.method(Method::GET).with(space::get);
-                r.method(Method::DELETE).with(space::delete);
-            })
-            // DATASETS          -------------------------------------------------------------------
-            .resource("/cores", |r| {
-                r.method(Method::POST).f(&cores::post);
-                r.method(Method::PUT).f(&cores::put);
-                r.method(Method::PATCH).f(&cores::patch);
-                r.method(Method::DELETE).f(&cores::delete);
-            })
-            .resource("/cores/{name}", |r| {
-                r.method(Method::PUT).with(core::put);
-                r.method(Method::GET).with(core::get);
-                r.method(Method::PATCH).with(core::patch);
-                r.method(Method::DELETE).with(core::delete);
-            })
-            // SPATIAL OBJECTS   -------------------------------------------------------------------
-            .resource("/cores/{name}/spatial_objects", |r| {
-                r.method(Method::POST).with(spatial_objects::post);
-                r.method(Method::PUT).with(spatial_objects::put);
-                r.method(Method::PATCH).with(spatial_objects::patch);
-                r.method(Method::DELETE).with(spatial_objects::delete);
-            })
-            .resource("/cores/{name}/spatial_objects/{id}", |r| {
-                r.method(Method::PUT).with(spatial_object::put);
-                r.method(Method::GET).with(spatial_object::get);
-                r.method(Method::PATCH).with(spatial_object::patch);
-                r.method(Method::DELETE).with(spatial_object::delete);
-            })
             // DEFAULT           -------------------------------------------------------------------
             .default_resource(|r| {
                 r.f(default::page_400);
+            })
+            // REQUIRES CORS Support ---------------------------------------------------------------
+            .configure(|app| {
+                let mut cors = Cors::for_app(app);
+                for origin in allowed_origins {
+                    cors.allowed_origin(origin);
+                }
+                cors.allowed_methods(vec!["GET", "POST", "UPDATE", "PATCH", "DELETE", "OPTIONS"])
+                    .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+                    .allowed_header(http::header::CONTENT_TYPE)
+                    .max_age(60)
+                    .resource("/queries", |r| {
+                        r.method(Method::POST).f(actions::query);
+                        r.route()
+                            .filter(pred::Not(pred::Post()))
+                            .f(default::page_400);
+                    })
+                    // SPACES            -------------------------------------------------------------------
+                    .resource("/spaces", |r| {
+                        r.method(Method::POST).f(spaces::post);
+                        r.method(Method::PUT).f(spaces::put);
+                        r.method(Method::PATCH).f(spaces::patch);
+                        r.method(Method::DELETE).f(spaces::delete);
+                    })
+                    .resource("/spaces/{name}", |r| {
+                        r.method(Method::PUT).with(space::put);
+                        r.method(Method::PATCH).with(space::patch);
+                        r.method(Method::GET).with(space::get);
+                        r.method(Method::DELETE).with(space::delete);
+                    })
+                    // DATASETS          -------------------------------------------------------------------
+                    .resource("/cores", |r| {
+                        r.method(Method::POST).f(&cores::post);
+                        r.method(Method::PUT).f(&cores::put);
+                        r.method(Method::PATCH).f(&cores::patch);
+                        r.method(Method::DELETE).f(&cores::delete);
+                    })
+                    .resource("/cores/{name}", |r| {
+                        r.method(Method::PUT).with(core::put);
+                        r.method(Method::GET).with(core::get);
+                        r.method(Method::PATCH).with(core::patch);
+                        r.method(Method::DELETE).with(core::delete);
+                    })
+                    // SPATIAL OBJECTS   -------------------------------------------------------------------
+                    .resource("/cores/{name}/spatial_objects", |r| {
+                        r.method(Method::POST).with(spatial_objects::post);
+                        r.method(Method::PUT).with(spatial_objects::put);
+                        r.method(Method::PATCH).with(spatial_objects::patch);
+                        r.method(Method::DELETE).with(spatial_objects::delete);
+                    })
+                    .resource("/cores/{name}/spatial_objects/{id}", |r| {
+                        r.method(Method::PUT).with(spatial_object::put);
+                        r.method(Method::GET).with(spatial_object::get);
+                        r.method(Method::PATCH).with(spatial_object::patch);
+                        r.method(Method::DELETE).with(spatial_object::delete);
+                    })
+                    .register()
             })
             .boxed(),
         App::new()
@@ -175,8 +186,13 @@ where
     ]
 }
 
-pub fn run<S>(host: S, port: u16, prefix: S, state: Arc<RwLock<SharedState>>)
-where
+pub fn run<S>(
+    host: S,
+    port: u16,
+    prefix: S,
+    allowed_origins: Vec<S>,
+    state: Arc<RwLock<SharedState>>,
+) where
     S: Into<String>,
 {
     info!("Initializing server...");
@@ -185,7 +201,12 @@ where
     let prefix = into_static(prefix);
     let host = host.into();
 
-    server::new(move || get_app(prefix, state.clone()))
+    let mut origins = Vec::with_capacity(allowed_origins.len());
+    for origin in allowed_origins {
+        origins.push(into_static(origin));
+    }
+
+    server::new(move || get_app(prefix, &origins, state.clone()))
         .bind(format!("{}:{}", host, port))
         .unwrap()
         .start();

@@ -45,6 +45,11 @@ fn main() {
     if std::env::var("MERCATOR_BASE").is_err() {
         std::env::set_var("MERCATOR_BASE", "/spatial-search");
     }
+
+    if std::env::var("MERCATOR_ALLOWED_ORIGINS").is_err() {
+        // Allow by default access from a locally running Swagger Editor instance.
+        std::env::set_var("MERCATOR_ALLOWED_ORIGINS", "http://localhost:3200");
+    }
     /* UNUSED FOR NOW
     if std::env::var("MERCATOR_DATA").is_err() {
         std::env::set_var("MERCATOR_DATA", ".");
@@ -54,6 +59,7 @@ fn main() {
     let hostname;
     let port;
     let base;
+    let allowed_origins: Vec<String>;
     //let data;
 
     match std::env::var("MERCATOR_HOST") {
@@ -82,6 +88,19 @@ fn main() {
         Ok(val) => base = val,
         Err(val) => {
             error!("Could not fetch {} : `{}`", "MERCATOR_BASE", val);
+            exit(1);
+        }
+    };
+
+    match std::env::var("MERCATOR_ALLOWED_ORIGINS") {
+        Ok(val) => {
+            allowed_origins = val
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .collect::<Vec<_>>()
+        }
+        Err(val) => {
+            error!("Could not fetch {} : `{}`", "MERCATOR_ALLOWED_ORIGINS", val);
             exit(1);
         }
     };
@@ -149,5 +168,11 @@ fn main() {
         // END of Temporary bloc
     }
 
-    rest_api::run(hostname, port, base, Arc::new(RwLock::new(db)));
+    rest_api::run(
+        hostname,
+        port,
+        base,
+        allowed_origins,
+        Arc::new(RwLock::new(db)),
+    );
 }
