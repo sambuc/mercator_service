@@ -1,22 +1,17 @@
-// WebService framework
-//#![cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
-//extern crate actix;
-//extern crate actix_web;
-
 #[macro_use]
 extern crate measure_time;
 
 #[macro_use]
 extern crate serde_derive;
 
-mod model;
 mod rest_api;
-mod storage;
 
 use std::process::exit;
 use std::sync::Arc;
 use std::sync::RwLock;
 
+use mercator_db::json::model;
+use mercator_db::json::storage;
 use mercator_db::DataBase;
 
 pub type SharedState = DataBase;

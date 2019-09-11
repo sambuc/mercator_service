@@ -32,7 +32,7 @@ pub fn get(
     let db = state.state().shared.read().unwrap();
 
     match db.core(core) {
-        Ok(core) => match core.get_by_id(&id, 0.0) {
+        Ok(core) => match core.get_by_id(&db, &id, None, 0.0) {
             Ok(objects) => ok_200(&to_spatial_objects(&db, objects)),
             Err(_) => error_404(),
         },
