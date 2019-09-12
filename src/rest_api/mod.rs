@@ -98,6 +98,9 @@ where
                 middleware::DefaultHeaders::new().header("Access-Control-Allow-Origin", "*"),
             )
             .prefix(into_static(prefix).to_string())
+            .middleware(middleware::Logger::new(
+                r#"%a "%r" %s %b "%{Referer}i" "%{User-Agent}i" %T[s] %D[ms]"#,
+            ))
             // ACTIONS           -------------------------------------------------------------------
             .resource("/health", |r| {
                 r.method(Method::GET).f(actions::health);
