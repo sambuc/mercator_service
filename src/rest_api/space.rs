@@ -9,13 +9,6 @@ use super::ok_200;
 use super::AppState;
 use super::StringOrStaticFileResult;
 
-/*
-pub fn post(_req: &HttpRequest<AppState>) ->StringOrStaticFileResult {
-    info!("POST Triggered!");
-    error_400()
-}
-*/
-
 pub fn put((path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
     trace!("PUT Triggered on {}", path);
     error_400()
@@ -24,9 +17,9 @@ pub fn put((path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrSta
 pub fn get((path, state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
     trace!("GET Triggered on '{}'", path);
     let name = path.to_string();
-    let db = state.state().shared.read().unwrap();
+    let context = state.state().shared.read().unwrap();
 
-    match db.space(name) {
+    match context.db().space(name) {
         Ok(space) => {
             let space: model::Space = space.into();
             ok_200(&space)

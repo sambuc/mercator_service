@@ -1,15 +1,19 @@
 use actix_web::HttpRequest;
 use actix_web::HttpResponse;
+use actix_web::Json;
 
 use super::error_400;
 use super::AppState;
+use super::Filters;
 use super::StringOrStaticFileResult;
 
 pub fn health(_req: &HttpRequest<AppState>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
-pub fn query(_req: &HttpRequest<AppState>) -> StringOrStaticFileResult {
+pub fn query(
+    (_parameters, _state): (Option<Json<Filters>>, HttpRequest<AppState>),
+) -> StringOrStaticFileResult {
     trace!("query Triggered!");
     error_400()
 }

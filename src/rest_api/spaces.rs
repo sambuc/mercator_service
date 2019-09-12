@@ -1,34 +1,59 @@
 use actix_web::HttpRequest;
+use actix_web::Json;
 
 use super::error_400;
 use super::ok_200;
 use super::AppState;
+use super::Filters;
 use super::StringOrStaticFileResult;
 
-pub fn post(state: &HttpRequest<AppState>) -> StringOrStaticFileResult {
+pub fn post(
+    (parameters, state): (Option<Json<Filters>>, HttpRequest<AppState>),
+) -> StringOrStaticFileResult {
     trace!("POST Triggered!");
-    let db = state.state().shared.read().unwrap();
+    let context = state.state().shared.read().unwrap();
+    let parameters = Filters::get(parameters);
 
-    ok_200(db.space_keys())
+    let mut results = match parameters.filters {
+        None => context.db().space_keys().clone(),
+        Some(filter) => context
+            .db()
+            .core_keys()
+            .iter()
+            .flat_map(|core| match context.filter(&filter, core, None, None) {
+                Err(_) => vec![], //FIXME: Return errors here instead!!
+                Ok(r) => {
+                    let mut r = r.into_iter().map(|o| o.space_id).collect::<Vec<_>>();
+                    r.sort_unstable();
+                    r.dedup();
+                    r
+                }
+            })
+            .collect(),
+    };
+    results.sort_unstable();
+    results.dedup();
+
+    ok_200(&results)
 }
 
-pub fn put(_state: &HttpRequest<AppState>) -> StringOrStaticFileResult {
+pub fn put(
+    (_parameters, _state): (Option<Json<Filters>>, HttpRequest<AppState>),
+) -> StringOrStaticFileResult {
     trace!("PUT Triggered!");
     error_400()
 }
 
-/*
-pub fn get(_state: &HttpRequest<AppState>) -> StringOrStaticFileResult {
-    trace!("GET Triggered!");
-    error_400()
-}*/
-
-pub fn patch(_state: &HttpRequest<AppState>) -> StringOrStaticFileResult {
+pub fn patch(
+    (_parameters, _state): (Option<Json<Filters>>, HttpRequest<AppState>),
+) -> StringOrStaticFileResult {
     trace!("PATCH Triggered!");
     error_400()
 }
 
-pub fn delete(_state: &HttpRequest<AppState>) -> StringOrStaticFileResult {
+pub fn delete(
+    (_parameters, _state): (Option<Json<Filters>>, HttpRequest<AppState>),
+) -> StringOrStaticFileResult {
     trace!("DELETE Triggered!");
     error_400()
 }

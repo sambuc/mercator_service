@@ -1,23 +1,37 @@
 use actix_web::HttpRequest;
+use actix_web::Json;
 use actix_web::Path;
 
 use super::error_400;
 use super::error_404;
 use super::ok_200;
 use super::AppState;
+use super::Filters;
 use super::StringOrStaticFileResult;
 
-pub fn post((core, state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+pub fn post(
+    (core_id, parameters, state): (Path<String>, Option<Json<Filters>>, HttpRequest<AppState>),
+) -> StringOrStaticFileResult {
     trace!("POST Triggered!");
-    let core = core.to_string();
-    let db = state.state().shared.read().unwrap();
+    let core = core_id.to_string();
+    let context = state.state().shared.read().unwrap();
 
-    match db.core(core) {
+    match context.db().core(core) {
         Ok(core) => {
-            // Generate a list of oid.
-            let v: Vec<&String> = core.keys().iter().map(|o| o.id()).collect();
+            let parameters = Filters::get(parameters);
 
-            ok_200(&v)
+            // Generate a list of oid.
+            let mut results = match parameters.filters {
+                None => core.keys().iter().map(|o| o.id().clone()).collect(),
+                Some(filter) => match context.filter(&filter, &core_id, None, None) {
+                    Err(_) => vec![], //FIXME: Return errors here instead!!
+                    Ok(objects) => objects.iter().map(|o| o.value.id().clone()).collect(),
+                },
+            };
+            results.sort_unstable();
+            results.dedup();
+
+            ok_200(&results)
         }
         Err(_) => error_404(),
     }
@@ -27,12 +41,6 @@ pub fn put((_path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrSt
     trace!("PUT Triggered!");
     error_400()
 }
-
-/*
-pub fn get((_path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
-    trace!("GET Triggered!");
-    error400()
-*/
 
 pub fn patch((_path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
     trace!("PATCH Triggered!");

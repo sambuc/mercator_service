@@ -5,6 +5,7 @@ extern crate measure_time;
 extern crate serde_derive;
 
 mod rest_api;
+mod shared_state;
 
 use std::process::exit;
 use std::sync::Arc;
@@ -14,7 +15,7 @@ use mercator_db::json::model;
 use mercator_db::json::storage;
 use mercator_db::DataBase;
 
-pub type SharedState = DataBase;
+use shared_state::SharedState;
 
 /*
 fn into_bool(string: &str) -> bool {
@@ -126,48 +127,20 @@ fn main() {
             }
         };
 
-        // Convert to binary the JSON data:
-        if true {
-            info_time!("Converting to binary JSON data");
-            storage::convert(&import);
-        }
-
-        // Build a Database Index:
-        if true {
-            info_time!("Building database index");
-            storage::build(&import);
-        }
-
         // Load a Database:
         {
             info_time!("Loading database index");
             db = DataBase::load(&import).unwrap();
         }
-        /*
-        let core = db.core(&import).unwrap();
-
-        let space = db.space("std").unwrap();
-        let lower = space.encode(&[0.2, 0.2, 0.2]).unwrap();
-        let higher = space.encode(&[0.8, 0.8, 0.8]).unwrap();
-
-        let shape = Shape::BoundingBox(lower.clone(), higher.clone());
-        let r;
-        {
-            info_time!("Query by box {:?} - {:?}", lower, higher);
-            r = core.get_by_shape(&shape, 0.0).unwrap();
-        }
-
-        println!("get_by_shape {:?}: {}", shape, r.len());
-        println!("{:?}: {:?}\n", shape, r[0]);
-        */
         // END of Temporary bloc
     }
+    let state = SharedState::new(db);
 
     rest_api::run(
         hostname,
         port,
         base,
         allowed_origins,
-        Arc::new(RwLock::new(db)),
+        Arc::new(RwLock::new(state)),
     );
 }

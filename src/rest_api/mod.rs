@@ -18,6 +18,7 @@ use actix_web::fs;
 use actix_web::http;
 use actix_web::http::Method;
 use actix_web::http::StatusCode;
+use actix_web::middleware;
 use actix_web::middleware::cors::Cors;
 use actix_web::pred;
 use actix_web::server;
@@ -25,6 +26,7 @@ use actix_web::server::HttpHandler;
 use actix_web::server::HttpHandlerTask;
 use actix_web::App;
 use actix_web::Either;
+use actix_web::Json;
 use serde::Serialize;
 
 use crate::SharedState;
@@ -34,21 +36,25 @@ pub struct AppState {
     shared: Arc<RwLock<SharedState>>,
 }
 
-/* EXAMPLE FOR STATE USAGE
-// simple handle
-fn index(req: &HttpRequest<AppState>) -> HttpResponse {
-    println!("{:?}", req);
-    {
-        // So that we release ASAP the exclusive lock.
-        *(req.state().shared.write().unwrap()) += 1;
-    }
-
-    HttpResponse::BadRequest().body(format!(
-        "Num of requests: {}",
-        req.state().shared.read().unwrap()
-    ))
+#[derive(Debug, Deserialize)]
+pub struct Filters {
+    filters: Option<String>,
+    ids_only: Option<bool>,
 }
-*/
+
+impl Filters {
+    pub fn get(parameters: Option<Json<Filters>>) -> Self {
+        trace!("PARAMETERS {:#?}", parameters);
+
+        match parameters {
+            None => Filters {
+                filters: None,
+                ids_only: Some(true),
+            },
+            Some(p) => p.0,
+        }
+    }
+}
 
 type StringOrStaticFileResult = Either<String, fs::NamedFile>;
 
@@ -120,19 +126,19 @@ where
                 cors.allowed_methods(vec!["GET", "POST", "UPDATE", "PATCH", "DELETE", "OPTIONS"])
                     .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
                     .allowed_header(http::header::CONTENT_TYPE)
-                    .max_age(60)
+                    .max_age(600)
                     .resource("/queries", |r| {
-                        r.method(Method::POST).f(actions::query);
+                        r.method(Method::POST).with(actions::query);
                         r.route()
                             .filter(pred::Not(pred::Post()))
                             .f(default::page_400);
                     })
                     // SPACES            -------------------------------------------------------------------
                     .resource("/spaces", |r| {
-                        r.method(Method::POST).f(spaces::post);
-                        r.method(Method::PUT).f(spaces::put);
-                        r.method(Method::PATCH).f(spaces::patch);
-                        r.method(Method::DELETE).f(spaces::delete);
+                        r.method(Method::POST).with(spaces::post);
+                        r.method(Method::PUT).with(spaces::put);
+                        r.method(Method::PATCH).with(spaces::patch);
+                        r.method(Method::DELETE).with(spaces::delete);
                     })
                     .resource("/spaces/{name}", |r| {
                         r.method(Method::PUT).with(space::put);
@@ -142,10 +148,10 @@ where
                     })
                     // DATASETS          -------------------------------------------------------------------
                     .resource("/cores", |r| {
-                        r.method(Method::POST).f(&cores::post);
-                        r.method(Method::PUT).f(&cores::put);
-                        r.method(Method::PATCH).f(&cores::patch);
-                        r.method(Method::DELETE).f(&cores::delete);
+                        r.method(Method::POST).with(&cores::post);
+                        r.method(Method::PUT).with(&cores::put);
+                        r.method(Method::PATCH).with(&cores::patch);
+                        r.method(Method::DELETE).with(&cores::delete);
                     })
                     .resource("/cores/{name}", |r| {
                         r.method(Method::PUT).with(core::put);

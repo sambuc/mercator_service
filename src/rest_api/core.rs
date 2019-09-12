@@ -1,27 +1,23 @@
+use actix_web::HttpRequest;
+use actix_web::Json;
+use actix_web::Path;
+
 use super::error_400;
 use super::error_404;
 use super::ok_200;
 use super::AppState;
 use super::StringOrStaticFileResult;
 
-use actix_web::HttpRequest;
-use actix_web::Path;
-
-/*
-pub fn post(_req: &HttpRequest<AppState>) -> StringOrStaticFileResult {
-    trace!("POST Triggered!");
-    error_400()
-}
-*/
-
 #[derive(Clone, Deserialize, Serialize)]
-struct Core {
+pub struct Core {
     name: String,
     version: String,
     scales: Vec<Vec<i32>>,
 }
 
-pub fn put((_path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+pub fn put(
+    (_path, _core, _state): (Path<String>, Json<Core>, HttpRequest<AppState>),
+) -> StringOrStaticFileResult {
     trace!("PUT Triggered!");
     error_400()
 }
@@ -29,9 +25,9 @@ pub fn put((_path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrSt
 pub fn get((core, state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
     trace!("GET Triggered!");
     let core = core.to_string();
-    let db = state.state().shared.read().unwrap();
+    let context = state.state().shared.read().unwrap();
 
-    match db.core(core) {
+    match context.db().core(core) {
         Ok(core) => ok_200(&Core {
             name: core.name().clone(),
             version: core.version().clone(),
@@ -43,7 +39,9 @@ pub fn get((core, state): (Path<String>, HttpRequest<AppState>)) -> StringOrStat
     }
 }
 
-pub fn patch((_path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+pub fn patch(
+    (_path, _core, _state): (Path<String>, Json<Core>, HttpRequest<AppState>),
+) -> StringOrStaticFileResult {
     trace!("PATCH Triggered!");
     error_400()
 }

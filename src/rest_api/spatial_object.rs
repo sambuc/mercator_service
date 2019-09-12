@@ -1,19 +1,13 @@
+use actix_web::HttpRequest;
+use actix_web::Json;
+use actix_web::Path;
+
 use super::error_400;
 use super::error_404;
 use super::ok_200;
 use super::AppState;
 use super::StringOrStaticFileResult;
 use crate::model::to_spatial_objects;
-
-use actix_web::HttpRequest;
-use actix_web::Path;
-
-/*
-pub fn post((_path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
-    info!("POST Triggered!");
-    error_400()
-}
-*/
 
 pub fn put(
     (core, id, state): (Path<String>, Path<String>, HttpRequest<AppState>),
@@ -29,11 +23,12 @@ pub fn get(
     let (core, id) = path.into_inner();
     let core = core.to_string();
     let id = id.to_string();
-    let db = state.state().shared.read().unwrap();
+    let context = state.state().shared.read().unwrap();
+    let db = context.db();
 
     match db.core(core) {
-        Ok(core) => match core.get_by_id(&db, &id, None, 0.0) {
-            Ok(objects) => ok_200(&to_spatial_objects(&db, objects)),
+        Ok(core) => match core.get_by_id(db, &id, None, 0.0) {
+            Ok(objects) => ok_200(&to_spatial_objects(db, objects)),
             Err(_) => error_404(),
         },
         Err(_) => error_404(),

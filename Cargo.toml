@@ -20,7 +20,7 @@ include = ["Cargo.toml", "README.md", "LICENSE", "ACKNOWLEDGEMENTS", "src/**/*.r
 
 [dependencies]
 mercator_db = "^0.1"
-#mercator_parser = "^0.1"
+mercator_parser = "^0.1"
 
 actix = "^0.7"
 actix-web = "^0.7"

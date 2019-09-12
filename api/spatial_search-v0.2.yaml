@@ -70,8 +70,8 @@ paths:
       summary: >
         Retrieve a list of space definition names.
       operationId: post_spaces
-      #      parameters:
-      #        - $ref: '#/parameters/Filters'
+      parameters:
+        - $ref: '#/parameters/Filters'
       responses:
         '200':
           $ref: '#/responses/ArrayOfStrings'
@@ -204,8 +204,8 @@ paths:
       summary: >
         Retrieve a list of core names.
       operationId: post_cores
-      #      parameters:
-      #        - $ref: '#/parameters/Filters'
+      parameters:
+        - $ref: '#/parameters/Filters'
       responses:
         '200':
           $ref: '#/responses/ArrayOfStrings'
@@ -356,8 +356,8 @@ paths:
       summary: >
         Retrieve a list of spatial object.
       operationId: post_spatial_objects
-      #      parameters:
-      #        - $ref: '#/parameters/Filters'
+      parameters:
+        - $ref: '#/parameters/Filters'
       responses:
         '200':
           $ref: '#/responses/ArrayOfStrings'
@@ -667,6 +667,7 @@ parameters:
   Filters:
     name: filters
     in: body
+    required: false
     description: >
       Filter string  to use to select the data.
 
