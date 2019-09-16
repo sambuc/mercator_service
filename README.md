@@ -20,7 +20,7 @@ This enables the index implementations to be agnostic from the underlying data s
 
 ### Hardware
 
- * **Processor:** 1GHz CPU
+ * **Processor:** XGHz CPU
  * **RAM:** Y MB per MB of indexed data
  * **Available storage space:** X MB per MB of indexed data
 
@@ -48,18 +48,27 @@ cargo install --release
 
 ### Usage
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vehicula pretium
-quam sit amet facilisis. Class aptent taciti sociosqu ad litora torquent per
-conubia nostra, per inceptos himenaeos. Curabitur metus sapien, rhoncus vitae
-eleifend nec, convallis vel nunc. Nulla metus mauris, porta eu porta eu,
-vulputate et est. Suspendisse lacinia leo vel auctor aliquet. Maecenas non arcu
-libero. Nulla ut eleifend dui. Cras bibendum pharetra facilisis. Proin mattis
-libero non pharetra tristique. Nam massa nulla, ultrices pharetra quam a,
-fermentum placerat dolor. Nullam mollis libero et neque lobortis, id dignissim
-lectus dignissim. Maecenas ligula enim, congue in ornare vel, volutpat ut ante.
+In order to configure the behavior of the service, there is couple of environment variables:
 
+* `RUST_LOG`: Set the level of logging, for example (**error**, **warn**, **info**, **debug**, **trace**). This can be controlled per subsystem of the service, or globally by specifying th subsystem and the level in a list, or omitting the subsystem part. For example:
+  ```sh
+  RUST_LOG="actix_web=debug,mercator_service=trace" # Set actix_web to debug, mercator_service to trace
+  RUST_LOG="trace" # Set everything to trace
+  ```
+
+* `MERCATOR_HOST`: Name or IP address to bind to.
+* `MERCATOR_PORT`: Port on which to listen.
+* `MERCATOR_BASE`: Prefix du service web.
+* `MERCATOR_ALLOWED_ORIGINS`: Allowed origins for CORS requests:
+  ```sh
+  MERCATOR_ALLOWED_ORIGINS="http://localhost:3200,http://localhost:3201, http://localhost:3202"
+  ```
+
+* `MERCATOR_IMPORT_DATA`: Provide the data set to expose.
+
+Complete example of a run:
 ```sh
-cargo run --release
+RUST_LOG="warn,actix_web=info,mercator_service=trace" MERCATOR_IMPORT_DATA="1000k" MERCATOR_ALLOWED_ORIGINS="http://localhost:3200,http://localhost:3201, http://localhost:3202" cargo run --release
 ```
 
 ## Documentation
