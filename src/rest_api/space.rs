@@ -1,23 +1,26 @@
-use actix_web::HttpRequest;
-use actix_web::Path;
+use std::sync::RwLock;
+
+use actix_web::web;
+use actix_web::web::Data;
+use actix_web::web::Path;
 
 use crate::model;
+use crate::shared_state::SharedState;
 
 use super::error_400;
 use super::error_404;
 use super::ok_200;
-use super::AppState;
-use super::StringOrStaticFileResult;
+use super::HandlerResult;
 
-pub fn put((path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+fn put(path: Path<String>) -> HandlerResult {
     trace!("PUT Triggered on {}", path);
     error_400()
 }
 
-pub fn get((path, state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+fn get((path, state): (Path<String>, Data<RwLock<SharedState>>)) -> HandlerResult {
     trace!("GET Triggered on '{}'", path);
     let name = path.to_string();
-    let context = state.state().shared.read().unwrap();
+    let context = state.read().unwrap();
 
     match context.db().space(name) {
         Ok(space) => {
@@ -28,66 +31,64 @@ pub fn get((path, state): (Path<String>, HttpRequest<AppState>)) -> StringOrStat
     }
 }
 
-pub fn patch((path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+fn patch(path: Path<String>) -> HandlerResult {
     trace!("PATCH Triggered on {}", path);
     error_400()
 }
 
-pub fn delete((path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+fn delete(path: Path<String>) -> HandlerResult {
     trace!("DELETE Triggered on {}", path);
     error_400()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::super::tests::*;
+pub fn config(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        web::resource("/spaces/{name}")
+            .route(web::get().to(get))
+            .route(web::put().to(put))
+            .route(web::patch().to(patch))
+            .route(web::delete().to(delete)),
+    );
+}
 
-    const INSTANCE_EXISTS: &str = "/spaces/42";
-    const INSTANCE_INVALID: &str = "/spaces/21";
+#[cfg(test)]
+mod routing {
+    use super::super::tests_utils::*;
+
+    const INSTANCE_EXISTS: &str = SPACE;
+    const INSTANCE_INVALID: &str = "/21-doesnotexists";
 
     // FIXME: Add Body to request to see difference between (in)valid bodied requests
 
     #[test]
     fn put() {
-        json::expect_200(http::Method::PUT, get_path(INSTANCE_EXISTS), "".to_string());
-        json::expect_422(http::Method::PUT, get_path(INSTANCE_EXISTS), "".to_string());
-        json::expect_200(
-            http::Method::PUT,
-            get_path(INSTANCE_INVALID),
-            "".to_string(),
-        );
+        json::expect_200(Method::PUT, &get_space(INSTANCE_EXISTS), "".to_string());
+        json::expect_422(Method::PUT, &get_space(INSTANCE_EXISTS), "".to_string());
+        json::expect_200(Method::PUT, &get_space(INSTANCE_INVALID), "".to_string());
     }
 
     #[test]
     fn patch() {
-        json::expect_200(
-            http::Method::PATCH,
-            get_path(INSTANCE_EXISTS),
-            "".to_string(),
-        );
-        json::expect_422(
-            http::Method::PATCH,
-            get_path(INSTANCE_EXISTS),
-            "".to_string(),
-        );
-        expect_400(http::Method::PATCH, get_path(INSTANCE_INVALID));
+        json::expect_200(Method::PATCH, &get_space(INSTANCE_EXISTS), "".to_string());
+        json::expect_422(Method::PATCH, &get_space(INSTANCE_EXISTS), "".to_string());
+        expect_400(Method::PATCH, &get_space(INSTANCE_INVALID));
     }
 
     #[test]
     fn get() {
-        expect_200(http::Method::GET, get_path(INSTANCE_EXISTS));
-        expect_404(http::Method::GET, get_path(INSTANCE_INVALID));
+        expect_200(Method::GET, &get_space(INSTANCE_EXISTS));
+        expect_404(Method::GET, &get_space(INSTANCE_INVALID));
     }
 
     #[test]
     fn delete() {
-        expect_200(http::Method::DELETE, get_path(INSTANCE_EXISTS));
-        expect_404(http::Method::DELETE, get_path(INSTANCE_INVALID));
+        expect_200(Method::DELETE, &get_space(INSTANCE_EXISTS));
+        expect_404(Method::DELETE, &get_space(INSTANCE_INVALID));
     }
 
     #[test]
     fn post() {
-        expect_400(http::Method::POST, get_path(INSTANCE_EXISTS));
-        expect_400(http::Method::POST, get_path(INSTANCE_INVALID));
+        expect_405(Method::POST, &get_space(INSTANCE_EXISTS));
+        expect_405(Method::POST, &get_space(INSTANCE_INVALID));
     }
 }

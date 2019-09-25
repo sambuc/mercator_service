@@ -1,20 +1,28 @@
-use actix_web::HttpRequest;
-use actix_web::Json;
-use actix_web::Path;
+use std::sync::RwLock;
+
+use actix_web::web;
+use actix_web::web::Data;
+use actix_web::web::Json;
+use actix_web::web::Path;
+
+use crate::shared_state::SharedState;
 
 use super::error_400;
 use super::error_404;
 use super::ok_200;
-use super::AppState;
 use super::Filters;
-use super::StringOrStaticFileResult;
+use super::HandlerResult;
 
-pub fn post(
-    (core_id, parameters, state): (Path<String>, Option<Json<Filters>>, HttpRequest<AppState>),
-) -> StringOrStaticFileResult {
+fn post(
+    (core_id, parameters, state): (
+        Path<String>,
+        Option<Json<Filters>>,
+        Data<RwLock<SharedState>>,
+    ),
+) -> HandlerResult {
     trace!("POST Triggered!");
     let core = core_id.to_string();
-    let context = state.state().shared.read().unwrap();
+    let context = state.read().unwrap();
 
     match context.db().core(core) {
         Ok(core) => {
@@ -23,8 +31,9 @@ pub fn post(
             // Generate a list of oid.
             let mut results = match parameters.filters {
                 None => core.keys().iter().map(|o| o.id().clone()).collect(),
+                // FIXME: Specify from json output space + threshold volume
                 Some(filter) => match context.filter(&filter, &core_id, None, None) {
-                    Err(_) => vec![], //FIXME: Return errors here instead!!
+                    Err(_) => vec![], // FIXME: Return errors here instead!!
                     Ok(objects) => objects.iter().map(|o| o.value.id().clone()).collect(),
                 },
             };
@@ -37,68 +46,76 @@ pub fn post(
     }
 }
 
-pub fn put((_path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+fn put() -> HandlerResult {
     trace!("PUT Triggered!");
     error_400()
 }
 
-pub fn patch((_path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+fn patch() -> HandlerResult {
     trace!("PATCH Triggered!");
     error_400()
 }
 
-pub fn delete((_path, _state): (Path<String>, HttpRequest<AppState>)) -> StringOrStaticFileResult {
+fn delete() -> HandlerResult {
     trace!("DELETE Triggered!");
     error_400()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::super::tests::*;
+pub fn config(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        web::resource("/cores/{name}/spatial_objects")
+            .route(web::post().to(post))
+            .route(web::put().to(put))
+            .route(web::patch().to(patch))
+            .route(web::delete().to(delete)),
+    );
+}
 
-    const COLLECTION: &str = "/cores/42/spatial_objects";
+#[cfg(test)]
+mod routing {
+    use super::super::tests_utils::*;
 
     // FIXME: Add Body to request to see difference between (in)valid bodied requests
 
     #[test]
     fn post() {
-        expect_200(http::Method::POST, get_path(COLLECTION));
-        json::expect_200(http::Method::POST, get_path(COLLECTION), "".to_string());
+        expect_200(Method::POST, &get_objects(""));
+        json::expect_200(Method::POST, &get_objects(""), "".to_string());
 
-        json::expect_422(http::Method::POST, get_path(COLLECTION), "".to_string());
+        json::expect_422(Method::POST, &get_objects(""), "".to_string());
 
-        expect_400(http::Method::POST, get_path(COLLECTION));
+        expect_400(Method::POST, &get_objects(""));
     }
 
     #[test]
     fn put() {
-        json::expect_200(http::Method::PUT, get_path(COLLECTION), "".to_string());
+        json::expect_200(Method::PUT, &get_objects(""), "".to_string());
 
-        json::expect_422(http::Method::PUT, get_path(COLLECTION), "".to_string());
+        json::expect_422(Method::PUT, &get_objects(""), "".to_string());
 
-        expect_400(http::Method::PUT, get_path(COLLECTION));
+        expect_400(Method::PUT, &get_objects(""));
     }
 
     #[test]
     fn patch() {
-        json::expect_200(http::Method::PATCH, get_path(COLLECTION), "".to_string());
+        json::expect_200(Method::PATCH, &get_objects(""), "".to_string());
 
-        json::expect_422(http::Method::PATCH, get_path(COLLECTION), "".to_string());
+        json::expect_422(Method::PATCH, &get_objects(""), "".to_string());
 
-        expect_400(http::Method::PATCH, get_path(COLLECTION));
+        expect_400(Method::PATCH, &get_objects(""));
     }
 
     #[test]
     fn delete() {
-        json::expect_200(http::Method::DELETE, get_path(COLLECTION), "".to_string());
+        json::expect_200(Method::DELETE, &get_objects(""), "".to_string());
 
-        json::expect_422(http::Method::DELETE, get_path(COLLECTION), "".to_string());
+        json::expect_422(Method::DELETE, &get_objects(""), "".to_string());
 
-        expect_400(http::Method::DELETE, get_path(COLLECTION));
+        expect_400(Method::DELETE, &get_objects(""));
     }
 
     #[test]
     fn get() {
-        expect_400(http::Method::GET, get_path(COLLECTION));
+        expect_405(Method::GET, &get_objects(""));
     }
 }

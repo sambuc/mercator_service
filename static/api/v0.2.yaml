@@ -34,13 +34,13 @@ paths:
       summary: >
         Health check of the service.
       description: >
-        Please note that making anything but a **GET** call is a bad request.
+        Please note that making anything but a **GET** call is a bad request, and will return a 405.
       operationId: get_health_check
       responses:
         '200':
           $ref: '#/responses/Standard200'
         default:
-          $ref: '#/responses/Standard400'
+          $ref: '#/responses/Standard405'
 
   /queries:
     post:
@@ -58,7 +58,7 @@ paths:
         '422':
           $ref: '#/responses/Standard422'
         default:
-          $ref: '#/responses/Standard400'
+          $ref: '#/responses/Standard405'
 
   #--------------------------------------------------------------------
   # SPACES QUERIES
@@ -748,6 +748,9 @@ responses:
   Standard422:
     description: >
       Unprocessable Entity
+  Standard405:
+    description: >
+      Invalid Method
   Standard404:
     description: >
       Object not found

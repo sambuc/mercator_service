@@ -8,11 +8,10 @@ mod rest_api;
 mod shared_state;
 
 use std::process::exit;
-use std::sync::Arc;
 use std::sync::RwLock;
 
+use actix_web::web::Data;
 use mercator_db::json::model;
-use mercator_db::json::storage;
 use mercator_db::DataBase;
 
 use shared_state::SharedState;
@@ -54,8 +53,6 @@ fn main() {
 
     let hostname;
     let port;
-    let base;
-    let allowed_origins: Vec<String>;
     //let data;
 
     match std::env::var("MERCATOR_HOST") {
@@ -76,27 +73,6 @@ fn main() {
         },
         Err(val) => {
             error!("Could not fetch {} : `{}`", "MERCATOR_PORT", val);
-            exit(1);
-        }
-    };
-
-    match std::env::var("MERCATOR_BASE") {
-        Ok(val) => base = val,
-        Err(val) => {
-            error!("Could not fetch {} : `{}`", "MERCATOR_BASE", val);
-            exit(1);
-        }
-    };
-
-    match std::env::var("MERCATOR_ALLOWED_ORIGINS") {
-        Ok(val) => {
-            allowed_origins = val
-                .split(',')
-                .map(|s| s.trim().to_string())
-                .collect::<Vec<_>>()
-        }
-        Err(val) => {
-            error!("Could not fetch {} : `{}`", "MERCATOR_ALLOWED_ORIGINS", val);
             exit(1);
         }
     };
@@ -134,13 +110,10 @@ fn main() {
         }
         // END of Temporary bloc
     }
-    let state = SharedState::new(db);
 
     rest_api::run(
-        hostname,
+        &hostname,
         port,
-        base,
-        allowed_origins,
-        Arc::new(RwLock::new(state)),
+        Data::new(RwLock::new(SharedState::new(db))),
     );
 }
