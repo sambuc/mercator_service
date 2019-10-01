@@ -5,6 +5,7 @@ use actix_web::web::Data;
 use actix_web::web::Json;
 use actix_web::HttpResponse;
 
+use crate::model::to_spatial_objects;
 use crate::shared_state::SharedState;
 
 use super::error_422;
@@ -14,39 +15,52 @@ use super::HandlerResult;
 #[derive(Debug, Deserialize)]
 pub struct Query {
     query: String,
+    resolution: Option<Vec<u64>>, // None means automatic selection, based on ViewPort
+    view_port: Option<(Vec<f64>, Vec<f64>)>,
 }
 
+impl Query {
+    pub fn query(&self) -> &String {
+        &self.query
+    }
+
+    pub fn resolution(&self) -> Option<Vec<u64>> {
+        self.resolution.clone()
+    }
+
+    pub fn volume(&self) -> Option<f64> {
+        match &self.view_port {
+            None => None,
+            Some(_view) => None, // FIXME: Need to move the Volume functions from mercator_parser to mercator_db.
+        }
+    }
+}
 // Also used for the root service.
 pub fn health() -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
 fn query((parameters, state): (Json<Query>, Data<RwLock<SharedState>>)) -> HandlerResult {
-    trace!("query Triggered!");
+    trace!("POST '{:?}'", parameters);
     let context = state.read().unwrap();
-    let query = &parameters.query;
+    let query = parameters.query();
 
     if query.is_empty() {
         error_422(format!("Invalid query in '{:?}'", query))
     } else {
-        // FIXME: MANAGE PROJECTIONS
-        let results = context
-            .db()
-            .core_keys()
-            .iter()
-            // FIXME: Specify from json output space + threshold volume
-            .flat_map(|core| match context.query(query, core, None, None) {
-                Err(_) => vec![], // FIXME: Return errors here instead!!
-                Ok(r) => {
-                    let mut r = r.into_iter().map(|o| o.space_id).collect::<Vec<_>>();
-                    r.sort_unstable();
-                    r.dedup();
-                    r
-                }
-            })
-            .collect::<Vec<_>>();
-
-        ok_200(&results)
+        ok_200(
+            &context
+                .db()
+                .core_keys()
+                .iter()
+                .flat_map(|core| {
+                    match context.query(query, core, parameters.volume(), parameters.resolution()) {
+                        Err(_) => vec![], // FIXME: Return errors here instead!!
+                        Ok(objects) => to_spatial_objects(context.db(), objects),
+                    }
+                })
+                .collect::<Vec<_>>(),
+        )
     }
 }
 

@@ -24,7 +24,6 @@ use actix_web::http::StatusCode;
 use actix_web::middleware;
 use actix_web::web;
 use actix_web::web::Data;
-use actix_web::web::Json;
 use actix_web::web::Path;
 use actix_web::App;
 use actix_web::Either;
@@ -43,25 +42,66 @@ use crate::SharedState;
 
 pub type HandlerResult = Result<Either<HttpResponse, NamedFile>, Error>;
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Filters {
     filters: Option<String>,
     ids_only: Option<bool>,
-    //    resolution: Option<Vec<u64>>, // None means automatic selection, based on ViewPort
-    //    view_port: Option<u64>,
+    space: Option<String>, // Output space, None, means each object in its own original space
+    resolution: Option<Vec<u64>>, // None means automatic selection, based on ViewPort
+    view_port: Option<(Vec<f64>, Vec<f64>)>,
 }
 
 impl Filters {
-    pub fn get(parameters: Option<Json<Filters>>) -> Self {
-        trace!("PARAMETERS {:#?}", parameters);
+    pub fn filters(&self) -> &Option<String> {
+        &self.filters
+    }
 
-        match parameters {
-            None => Filters {
-                filters: None,
-                ids_only: Some(true),
-                //resolution: None,
-            },
-            Some(p) => p.0,
+    pub fn ids_only(&self) -> bool {
+        match self.ids_only {
+            None => true, // Defaults to true
+            Some(b) => b,
+        }
+    }
+
+    pub fn space(&self, db: &mercator_db::DataBase) -> Result<Option<String>, HandlerResult> {
+        if let Some(space_id) = &self.space {
+            if !db.space_keys().contains(&space_id.to_string()) {
+                return Err(error_422(format!(
+                    "Invalid reference space id in '{:?}'",
+                    self
+                )));
+            }
+        }
+        Ok(self.space.clone())
+    }
+
+    pub fn resolution(&self) -> Option<Vec<u64>> {
+        self.resolution.clone()
+    }
+
+    pub fn volume(&self) -> Option<f64> {
+        match &self.view_port {
+            None => None,
+            Some(_view) => None, // FIXME: Need to move the Volume functions from mercator_parser to mercator_db.
+        }
+    }
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct Core {
+    name: String,
+    version: String,
+    scales: Vec<Vec<i32>>,
+}
+
+impl From<&mercator_db::Core> for Core {
+    fn from(core: &mercator_db::Core) -> Self {
+        Core {
+            name: core.name().clone(),
+            version: core.version().clone(),
+            scales: vec![vec![0, 0, 0]],
+            // FIXME: Report the actual values. Might need to change the format
+            //        to per reference space.
         }
     }
 }
@@ -77,6 +117,7 @@ where
 fn config_v1(cfg: &mut web::ServiceConfig) {
     // Warning: Order matters, as a more generic path would catch calls for a
     // more specific one when registered first.
+
     space::config(cfg);
     spaces::config(cfg);
 
@@ -279,7 +320,7 @@ mod routing {
 
     #[test]
     fn default_no_path() {
-        // FIXME: Currently the string is validated by the URI constructor which
+        // _FIXME: Currently the string is validated by the URI constructor which
         //        simply unwraps, thus we have to resort to this ugly workaround.
         //        The goal is to catch if that behavior changes in the future.
         let result = panic::catch_unwind(|| {

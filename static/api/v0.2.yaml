@@ -667,7 +667,7 @@ parameters:
   Filters:
     name: filters
     in: body
-    required: false
+    required: true
     description: >
       Filter string  to use to select the data.
 

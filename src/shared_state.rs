@@ -1,3 +1,4 @@
+use mercator_db::CoreQueryParameters;
 use mercator_db::DataBase;
 use parser::Executor;
 use parser::FiltersParser;
@@ -35,11 +36,19 @@ impl SharedState {
         &self,
         input: &str,
         core: &str,
-        output_space: Option<&str>,
-        threshold_volume: Option<f64>,
+        output_space: Option<String>,
+        volume: Option<f64>,
+        resolution: Option<Vec<u64>>,
     ) -> mercator_db::ResultSet {
         let parser = self.filter_parser();
         let parse;
+
+        let parameters = CoreQueryParameters {
+            db: self.db(),
+            output_space: output_space.as_ref().map(String::as_str),
+            threshold_volume: volume,
+            resolution,
+        };
 
         // Parse Input
         {
@@ -68,7 +77,7 @@ impl SharedState {
                 // Execute filter.
                 {
                     info_time!("Execution");
-                    execution = tree.execute(self.db(), core, output_space, threshold_volume);
+                    execution = tree.execute(core, &parameters);
                 }
                 match execution {
                     Err(e) => {
@@ -85,11 +94,17 @@ impl SharedState {
         &self,
         input: &str,
         core: &str,
-        output_space: Option<&str>,
-        threshold_volume: Option<f64>,
+        volume: Option<f64>,
+        resolution: Option<Vec<u64>>,
     ) -> mercator_db::ResultSet {
         let parser = self.query_parser();
         let parse;
+        let parameters = CoreQueryParameters {
+            db: self.db(),
+            output_space: None,
+            threshold_volume: volume,
+            resolution,
+        };
 
         // Parse Input
         {
@@ -119,7 +134,9 @@ impl SharedState {
                 // Execute filter.
                 {
                     info_time!("Execution");
-                    execution = tree.execute(self.db(), core, output_space, threshold_volume);
+                    // _FIXME: Output space is defined as part of the projection
+                    //        and is ignored by projections operators.
+                    execution = tree.execute(core, &parameters);
                 }
                 match execution {
                     Err(e) => {

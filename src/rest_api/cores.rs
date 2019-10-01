@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::sync::RwLock;
 
 use actix_web::web;
@@ -7,33 +8,75 @@ use actix_web::web::Json;
 use crate::shared_state::SharedState;
 
 use super::error_400;
+use super::error_422;
 use super::ok_200;
+use super::Core;
 use super::Filters;
 use super::HandlerResult;
 
-fn post((parameters, state): (Option<Json<Filters>>, Data<RwLock<SharedState>>)) -> HandlerResult {
-    trace!("POST Triggered!");
+fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> HandlerResult {
+    trace!("POST '{:?}'", parameters);
     let context = state.read().unwrap();
-    let parameters = Filters::get(parameters);
+    let db = context.db();
 
-    let mut results = match parameters.filters {
-        None => context.db().core_keys().clone(),
-        Some(filter) => context
-            .db()
-            .core_keys()
-            .iter()
-            //FIXME: Specify from json output space + threshold volume
-            .filter_map(|core| match context.filter(&filter, core, None, None) {
-                Err(_) => None, // FIXME: Return errors here instead!!
-                Ok(_) => Some(core.to_string()),
-            })
-            .collect(),
-    };
+    match parameters.space(db) {
+        Err(e) => e,
+        Ok(space) => {
+            match parameters.filters() {
+                None => {
+                    if parameters.ids_only() {
+                        ok_200(db.core_keys())
+                    } else {
+                        let cores = db
+                            .core_keys()
+                            .iter()
+                            .filter_map(|id| match db.core(id) {
+                                Err(_) => None, // FIXME: Return error ?
+                                Ok(x) => Some(Core::from(x)),
+                            })
+                            .collect::<Vec<_>>();
 
-    results.sort_unstable();
-    results.dedup();
+                        ok_200(&cores)
+                    }
+                }
+                Some(filter) => {
+                    // Retrieve the list of core ids.
+                    let mut results = HashSet::new();
 
-    ok_200(&results)
+                    for core in db.core_keys() {
+                        match context.filter(
+                            filter,
+                            core,
+                            space.clone(),
+                            parameters.volume(),
+                            parameters.resolution(),
+                        ) {
+                            Err(e) => return error_422(e),
+                            Ok(objects) => {
+                                // If the list of SpaceObjects is not empty, add
+                                // the current core to the list.
+                                if !objects.is_empty() {
+                                    results.insert(core.to_string());
+                                }
+                            }
+                        }
+                    }
+
+                    // Format the list or the whole core objects.
+                    if parameters.ids_only() {
+                        ok_200(&results.drain().collect::<Vec<_>>())
+                    } else {
+                        ok_200(
+                            &results
+                                .drain()
+                                .map(|x| Core::from(db.core(x).unwrap()))
+                                .collect::<Vec<_>>(),
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 fn put() -> HandlerResult {

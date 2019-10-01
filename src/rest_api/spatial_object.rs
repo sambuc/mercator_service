@@ -3,6 +3,7 @@ use std::sync::RwLock;
 use actix_web::web;
 use actix_web::web::Data;
 use actix_web::web::Path;
+use mercator_db::CoreQueryParameters;
 
 use crate::model::to_spatial_objects;
 use crate::shared_state::SharedState;
@@ -13,20 +14,28 @@ use super::ok_200;
 use super::HandlerResult;
 
 fn put(path: Path<String>) -> HandlerResult {
-    trace!("PUT Triggered on {}", path);
+    trace!("PUT '{:?}'", path);
     error_400()
 }
 
 fn get((path, state): (Path<(String, String)>, Data<RwLock<SharedState>>)) -> HandlerResult {
-    trace!("GET Triggered!");
+    trace!("GET '{:?}'", path);
     let (core, id) = path.into_inner();
     let core = core.to_string();
     let id = id.to_string();
     let context = state.read().unwrap();
     let db = context.db();
 
+    // FIXME: Should we allow setting the resolution/threshold_volume?
+    let parameters = CoreQueryParameters {
+        db,
+        output_space: None,
+        threshold_volume: Some(0.0), // Empty volume => Highest resolution possible
+        resolution: None,
+    };
+
     match db.core(core) {
-        Ok(core) => match core.get_by_id(db, &id, None, 0.0) {
+        Ok(core) => match core.get_by_id(&parameters, &id) {
             Ok(objects) => {
                 let results = to_spatial_objects(db, objects);
                 if results.is_empty() {

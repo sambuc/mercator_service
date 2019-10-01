@@ -13,12 +13,12 @@ use super::ok_200;
 use super::HandlerResult;
 
 fn put(path: Path<String>) -> HandlerResult {
-    trace!("PUT Triggered on {}", path);
+    trace!("POST '{:?}'", path);
     error_400()
 }
 
 fn get((path, state): (Path<String>, Data<RwLock<SharedState>>)) -> HandlerResult {
-    trace!("GET Triggered on '{}'", path);
+    trace!("GET '{:?}'", path);
     let name = path.to_string();
     let context = state.read().unwrap();
 

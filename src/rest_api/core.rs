@@ -9,14 +9,8 @@ use crate::shared_state::SharedState;
 use super::error_400;
 use super::error_404;
 use super::ok_200;
+use super::Core;
 use super::HandlerResult;
-
-#[derive(Clone, Deserialize, Serialize)]
-pub struct Core {
-    name: String,
-    version: String,
-    scales: Vec<Vec<i32>>,
-}
 
 fn put(path: Path<String>) -> HandlerResult {
     trace!("PUT Triggered on {}", path);
@@ -24,18 +18,12 @@ fn put(path: Path<String>) -> HandlerResult {
 }
 
 fn get((core, state): (Path<String>, Data<RwLock<SharedState>>)) -> HandlerResult {
-    trace!("GET Triggered!");
+    trace!("GET '{:?}'", core);
     let core = core.to_string();
     let context = state.read().unwrap();
 
     match context.db().core(core) {
-        Ok(core) => ok_200(&Core {
-            name: core.name().clone(),
-            version: core.version().clone(),
-            scales: vec![vec![0, 0, 0]],
-            // FIXME: Report the actual values. Might need to change the format
-            //        to per reference space.
-        }),
+        Ok(core) => ok_200(&Core::from(core)),
         Err(_) => error_404(),
     }
 }

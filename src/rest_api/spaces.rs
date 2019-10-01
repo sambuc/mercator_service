@@ -1,43 +1,85 @@
+use std::collections::HashSet;
 use std::sync::RwLock;
 
 use actix_web::web;
 use actix_web::web::Data;
 use actix_web::web::Json;
 
+use crate::model;
 use crate::shared_state::SharedState;
 
 use super::error_400;
+use super::error_422;
 use super::ok_200;
 use super::Filters;
 use super::HandlerResult;
 
-fn post((parameters, state): (Option<Json<Filters>>, Data<RwLock<SharedState>>)) -> HandlerResult {
-    trace!("POST Triggered!");
+fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> HandlerResult {
+    trace!("POST '{:?}'", parameters);
     let context = state.read().unwrap();
-    let parameters = Filters::get(parameters);
+    let db = context.db();
 
-    let mut results = match parameters.filters {
-        None => context.db().space_keys().clone(),
-        Some(filter) => context
-            .db()
-            .core_keys()
-            .iter()
-            // FIXME: Specify from json output space + threshold volume
-            .flat_map(|core| match context.filter(&filter, core, None, None) {
-                Err(_) => vec![], // FIXME: Return errors here instead!!
-                Ok(r) => {
-                    let mut r = r.into_iter().map(|o| o.space_id).collect::<Vec<_>>();
-                    r.sort_unstable();
-                    r.dedup();
-                    r
+    match parameters.space(db) {
+        Err(e) => e,
+        Ok(space) => {
+            match parameters.filters() {
+                None => {
+                    if parameters.ids_only() {
+                        ok_200(db.space_keys())
+                    } else {
+                        let spaces = db
+                            .space_keys()
+                            .iter()
+                            .filter_map(|id| match db.space(id) {
+                                Err(_) => None, // FIXME: Return error ?
+                                Ok(x) => Some(model::Space::from(x)),
+                            })
+                            .collect::<Vec<_>>();
+
+                        ok_200(&spaces)
+                    }
                 }
-            })
-            .collect(),
-    };
-    results.sort_unstable();
-    results.dedup();
+                Some(filter) => {
+                    // Retrieve the list of space ids.
+                    let mut results = HashSet::new();
 
-    ok_200(&results)
+                    for core in db.core_keys() {
+                        match context.filter(
+                            filter,
+                            core,
+                            space.clone(),
+                            parameters.volume(),
+                            parameters.resolution(),
+                        ) {
+                            Err(e) => return error_422(e),
+                            Ok(objects) => {
+                                // We have a list of SpaceObjects, so extract
+                                // the space Ids
+                                for o in objects {
+                                    results.insert(o.space_id);
+                                }
+                            }
+                        }
+                    }
+
+                    // Format the list or the whole space objects.
+                    if parameters.ids_only() {
+                        ok_200(&results.drain().collect::<Vec<_>>())
+                    } else {
+                        ok_200(
+                            &results
+                                .drain()
+                                .map(|id| match db.space(id) {
+                                    Err(_) => None,
+                                    Ok(x) => Some(model::Space::from(x)),
+                                })
+                                .collect::<Vec<_>>(),
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 fn put() -> HandlerResult {
