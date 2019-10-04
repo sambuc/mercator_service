@@ -11,6 +11,7 @@ use std::process::exit;
 use std::sync::RwLock;
 
 use actix_web::web::Data;
+use glob::glob;
 use mercator_db::json::model;
 use mercator_db::DataBase;
 
@@ -45,15 +46,14 @@ fn main() {
         // Allow by default access from a locally running Swagger Editor instance.
         std::env::set_var("MERCATOR_ALLOWED_ORIGINS", "http://localhost:3200");
     }
-    /* UNUSED FOR NOW
+
     if std::env::var("MERCATOR_DATA").is_err() {
         std::env::set_var("MERCATOR_DATA", ".");
     }
-    */
 
     let hostname;
     let port;
-    //let data;
+    let data;
 
     match std::env::var("MERCATOR_HOST") {
         Ok(val) => hostname = val,
@@ -77,38 +77,34 @@ fn main() {
         }
     };
 
-    /* UNUSED FOR NOW
     match std::env::var("MERCATOR_DATA") {
         Ok(val) => data = val,
         Err(val) => {
             error!("Could not fetch {} : `{}`", "MERCATOR_DATA", val);
             exit(1);
         }
-    };*/
+    };
+
+    let datasets = glob(&format!("{}/*.index", data))
+        .expect("Failed to read glob pattern")
+        .filter_map(|entry| match entry {
+            Ok(path) => match path.canonicalize() {
+                Ok(path) => Some(format!("{}", path.display())),
+                Err(_) => None,
+            },
+            Err(_) => None,
+        })
+        .collect::<Vec<_>>();
+
+    // FIXME: Why do we have to go through a temporary variable?
+    let datasets = datasets.iter().map(String::as_str).collect::<Vec<_>>();
 
     let db;
+    // Load a Database:
     {
-        // Temporary, until data ingestion can be done through the REST API.
-        let import;
+        info_time!("Loading database index");
 
-        if std::env::var("MERCATOR_IMPORT_DATA").is_err() {
-            std::env::set_var("MERCATOR_IMPORT_DATA", "test_data");
-        }
-
-        match std::env::var("MERCATOR_IMPORT_DATA") {
-            Ok(val) => import = val,
-            Err(val) => {
-                error!("Could not fetch {} : `{}`", "MERCATOR_IMPORT_DATA", val);
-                exit(1);
-            }
-        };
-
-        // Load a Database:
-        {
-            info_time!("Loading database index");
-            db = DataBase::load(&import).unwrap();
-        }
-        // END of Temporary bloc
+        db = DataBase::load(&datasets).unwrap();
     }
 
     rest_api::run(
