@@ -49,6 +49,7 @@ fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> Hand
                             core,
                             space.clone(),
                             parameters.volume(),
+                            &parameters.view_port,
                             parameters.resolution(),
                         ) {
                             Err(e) => return error_422(e),

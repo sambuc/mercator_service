@@ -15,7 +15,7 @@ use super::HandlerResult;
 #[derive(Debug, Deserialize)]
 pub struct Query {
     query: String,
-    resolution: Option<Vec<u64>>, // None means automatic selection, based on ViewPort
+    resolution: Option<Vec<u32>>, // None means automatic selection, based on ViewPort
     view_port: Option<(Vec<f64>, Vec<f64>)>,
 }
 
@@ -24,7 +24,7 @@ impl Query {
         &self.query
     }
 
-    pub fn resolution(&self) -> Option<Vec<u64>> {
+    pub fn resolution(&self) -> Option<Vec<u32>> {
         self.resolution.clone()
     }
 
@@ -54,7 +54,13 @@ fn query((parameters, state): (Json<Query>, Data<RwLock<SharedState>>)) -> Handl
                 .core_keys()
                 .iter()
                 .flat_map(|core| {
-                    match context.query(query, core, parameters.volume(), parameters.resolution()) {
+                    match context.query(
+                        query,
+                        core,
+                        parameters.volume(),
+                        &parameters.view_port,
+                        parameters.resolution(),
+                    ) {
                         Err(_) => vec![], // FIXME: Return errors here instead!!
                         Ok(objects) => to_spatial_objects(context.db(), objects),
                     }

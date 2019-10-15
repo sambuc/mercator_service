@@ -34,27 +34,29 @@ impl SharedState {
 
     pub fn filter(
         &self,
-        input: &str,
+        filter: &str,
         core: &str,
         output_space: Option<String>,
         volume: Option<f64>,
-        resolution: Option<Vec<u64>>,
+        view_port: &Option<(Vec<f64>, Vec<f64>)>,
+        resolution: Option<Vec<u32>>,
     ) -> mercator_db::ResultSet {
         let parser = self.filter_parser();
         let parse;
-
         let parameters = CoreQueryParameters {
             db: self.db(),
             output_space: output_space.as_ref().map(String::as_str),
             threshold_volume: volume,
+            view_port,
             resolution,
         };
 
         // Parse Input
         {
             info_time!("Parsing");
-            parse = parser.parse(input);
+            parse = parser.parse(filter);
         }
+
         match parse {
             Err(e) => {
                 debug!("Parsing failed: \n{:?}", e);
@@ -92,10 +94,11 @@ impl SharedState {
 
     pub fn query(
         &self,
-        input: &str,
+        query: &str,
         core: &str,
         volume: Option<f64>,
-        resolution: Option<Vec<u64>>,
+        view_port: &Option<(Vec<f64>, Vec<f64>)>,
+        resolution: Option<Vec<u32>>,
     ) -> mercator_db::ResultSet {
         let parser = self.query_parser();
         let parse;
@@ -103,13 +106,14 @@ impl SharedState {
             db: self.db(),
             output_space: None,
             threshold_volume: volume,
+            view_port,
             resolution,
         };
 
         // Parse Input
         {
             info_time!("Parsing");
-            parse = parser.parse(input);
+            parse = parser.parse(query);
         }
         match parse {
             Err(e) => {

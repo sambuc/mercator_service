@@ -115,7 +115,7 @@ paths:
     delete:
       tags: [Spaces]
       summary: >
-        Delete mulltiple spaces at a time.
+        Delete multiple spaces at a time.
 
         Each reference space can only be removed if and only if there
           are no spatial objects left referencing it.
@@ -249,7 +249,7 @@ paths:
     delete:
       tags: [Cores]
       summary: >
-        Delete mulltiple Cores at a time. This also removes all the
+        Delete multiple Cores at a time. This also removes all the
           Spatial Objects tied to these cores.
       operationId: delete_cores
       parameters:
@@ -401,7 +401,7 @@ paths:
     delete:
       tags: [Spatial Objects]
       summary: >
-        Delete mulltiple spatial objects at a time.
+        Delete multiple spatial objects at a time.
       operationId: delete_spatial_objects
       parameters:
         - $ref: '#/parameters/SpatialObjectIds'
@@ -682,6 +682,20 @@ parameters:
         ids_only:
           type: boolean
           default: false
+        space:
+          type: string
+        resolution:
+          type: array
+          items:
+            type: number
+              minimum: 0
+              format: int32
+        view_port:
+          type: array
+          items:
+            type: array
+              items:
+                type: number
 
   Query:
     name: query
@@ -690,7 +704,22 @@ parameters:
     description: >
       For more about the query syntax, please refer to `FIXME: URL` http://repo/queries.g4.
     schema:
-      type: string
+      type: object
+      properties:
+        query:
+          type: string
+        resolution:
+          type: array
+          items:
+            type: number
+              minimum: 0
+              format: int32
+        view_port:
+          type: array
+          items:
+            type: array
+              items:
+                type: number
 
 responses:
   Space200:

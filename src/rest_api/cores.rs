@@ -42,13 +42,13 @@ fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> Hand
                 Some(filter) => {
                     // Retrieve the list of core ids.
                     let mut results = HashSet::new();
-
                     for core in db.core_keys() {
                         match context.filter(
                             filter,
                             core,
                             space.clone(),
                             parameters.volume(),
+                            &parameters.view_port,
                             parameters.resolution(),
                         ) {
                             Err(e) => return error_422(e),

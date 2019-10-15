@@ -64,11 +64,11 @@ In order to configure the behavior of the service, there is couple of environmen
   MERCATOR_ALLOWED_ORIGINS="http://localhost:3200,http://localhost:3201, http://localhost:3202"
   ```
 
-* `MERCATOR_IMPORT_DATA`: Provide the data set to expose.
+* `MERCATOR_DATA`: Provide the root folder of the data sets to expose.
 
 Complete example of a run:
 ```sh
-RUST_LOG="warn,actix_web=info,mercator_service=trace" MERCATOR_IMPORT_DATA="1000k" MERCATOR_ALLOWED_ORIGINS="http://localhost:3200,http://localhost:3201, http://localhost:3202" cargo run --release
+RUST_LOG="warn,actix_web=info,mercator_service=trace" MERCATOR_DATA="../mercator_indexer" MERCATOR_ALLOWED_ORIGINS="http://localhost:3200,http://localhost:3201, http://localhost:3202" cargo run --release
 ```
 
 ## Documentation

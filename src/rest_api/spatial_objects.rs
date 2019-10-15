@@ -43,6 +43,7 @@ fn post(
                             db,
                             output_space: space.as_ref().map(String::as_str),
                             threshold_volume: parameters.volume(),
+                            view_port: &parameters.view_port,
                             resolution: parameters.resolution(),
                         };
 
@@ -64,6 +65,7 @@ fn post(
                         &core_id,
                         space,
                         parameters.volume(),
+                        &parameters.view_port,
                         parameters.resolution(),
                     ) {
                         Err(e) => error_422(e),

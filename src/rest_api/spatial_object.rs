@@ -30,8 +30,10 @@ fn get((path, state): (Path<(String, String)>, Data<RwLock<SharedState>>)) -> Ha
     let parameters = CoreQueryParameters {
         db,
         output_space: None,
-        threshold_volume: Some(0.0), // Empty volume => Highest resolution possible
-        resolution: None,
+        // Enforce highest resolution index.
+        threshold_volume: None,
+        view_port: &None,
+        resolution: Some(vec![0]),
     };
 
     match db.core(core) {

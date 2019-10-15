@@ -29,6 +29,7 @@ use actix_web::App;
 use actix_web::Either;
 use actix_web::HttpResponse;
 use actix_web::HttpServer;
+use mercator_db::space::Shape;
 
 #[cfg(feature = "static-error-pages")]
 pub use helpers_static_pages::*;
@@ -47,7 +48,7 @@ pub struct Filters {
     filters: Option<String>,
     ids_only: Option<bool>,
     space: Option<String>, // Output space, None, means each object in its own original space
-    resolution: Option<Vec<u64>>, // None means automatic selection, based on ViewPort
+    resolution: Option<Vec<u32>>, // None means automatic selection, based on ViewPort
     view_port: Option<(Vec<f64>, Vec<f64>)>,
 }
 
@@ -75,14 +76,16 @@ impl Filters {
         Ok(self.space.clone())
     }
 
-    pub fn resolution(&self) -> Option<Vec<u64>> {
+    pub fn resolution(&self) -> Option<Vec<u32>> {
         self.resolution.clone()
     }
 
     pub fn volume(&self) -> Option<f64> {
         match &self.view_port {
             None => None,
-            Some(_view) => None, // FIXME: Need to move the Volume functions from mercator_parser to mercator_db.
+            Some((low, high)) => {
+                Some(Shape::BoundingBox(low.clone().into(), high.clone().into()).volume())
+            }
         }
     }
 }
