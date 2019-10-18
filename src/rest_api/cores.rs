@@ -46,7 +46,7 @@ fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> Hand
                         match context.filter(
                             filter,
                             core,
-                            space.clone(),
+                            &space,
                             parameters.volume(),
                             &parameters.view_port,
                             parameters.resolution(),
@@ -69,7 +69,7 @@ fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> Hand
                         ok_200(
                             &results
                                 .drain()
-                                .map(|x| Core::from(db.core(x).unwrap()))
+                                .map(|x| Core::from(db.core(&x).unwrap()))
                                 .collect::<Vec<_>>(),
                         )
                     }

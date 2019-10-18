@@ -24,8 +24,8 @@ impl Query {
         &self.query
     }
 
-    pub fn resolution(&self) -> Option<Vec<u32>> {
-        self.resolution.clone()
+    pub fn resolution(&self) -> &Option<Vec<u32>> {
+        &self.resolution
     }
 
     pub fn volume(&self) -> Option<f64> {

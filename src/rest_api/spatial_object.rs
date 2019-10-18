@@ -33,10 +33,10 @@ fn get((path, state): (Path<(String, String)>, Data<RwLock<SharedState>>)) -> Ha
         // Enforce highest resolution index.
         threshold_volume: None,
         view_port: &None,
-        resolution: Some(vec![0]),
+        resolution: &Some(vec![0]),
     };
 
-    match db.core(core) {
+    match db.core(&core) {
         Ok(core) => match core.get_by_id(&parameters, &id) {
             Ok(objects) => {
                 let results = to_spatial_objects(db, objects);

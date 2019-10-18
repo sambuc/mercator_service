@@ -22,7 +22,7 @@ fn get((path, state): (Path<String>, Data<RwLock<SharedState>>)) -> HandlerResul
     let name = path.to_string();
     let context = state.read().unwrap();
 
-    match context.db().space(name) {
+    match context.db().space(&name) {
         Ok(space) => {
             let space: model::Space = space.into();
             ok_200(&space)

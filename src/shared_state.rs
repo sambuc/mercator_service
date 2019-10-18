@@ -36,10 +36,10 @@ impl SharedState {
         &self,
         filter: &str,
         core: &str,
-        output_space: Option<String>,
+        output_space: &Option<String>,
         volume: Option<f64>,
         view_port: &Option<(Vec<f64>, Vec<f64>)>,
-        resolution: Option<Vec<u32>>,
+        resolution: &Option<Vec<u32>>,
     ) -> mercator_db::ResultSet {
         let parser = self.filter_parser();
         let parse;
@@ -98,7 +98,7 @@ impl SharedState {
         core: &str,
         volume: Option<f64>,
         view_port: &Option<(Vec<f64>, Vec<f64>)>,
-        resolution: Option<Vec<u32>>,
+        resolution: &Option<Vec<u32>>,
     ) -> mercator_db::ResultSet {
         let parser = self.query_parser();
         let parse;

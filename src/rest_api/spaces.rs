@@ -47,7 +47,7 @@ fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> Hand
                         match context.filter(
                             filter,
                             core,
-                            space.clone(),
+                            &space,
                             parameters.volume(),
                             &parameters.view_port,
                             parameters.resolution(),
@@ -70,7 +70,7 @@ fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> Hand
                         ok_200(
                             &results
                                 .drain()
-                                .map(|id| match db.space(id) {
+                                .map(|id| match db.space(&id) {
                                     Err(_) => None,
                                     Ok(x) => Some(model::Space::from(x)),
                                 })

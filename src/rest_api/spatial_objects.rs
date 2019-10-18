@@ -25,7 +25,7 @@ fn post(
     let context = state.read().unwrap();
     let db = context.db();
 
-    match db.core(core_id.clone()) {
+    match db.core(&core_id) {
         Err(_) => error_404(),
         Ok(core) => match parameters.space(db) {
             Err(e) => e,
@@ -33,7 +33,7 @@ fn post(
                 None => {
                     let mut results = HashSet::new();
                     for property in core.keys().iter() {
-                        results.insert(property.id().clone());
+                        results.insert(property.id());
                     }
 
                     if parameters.ids_only() {
@@ -73,7 +73,7 @@ fn post(
                             if parameters.ids_only() {
                                 let mut uniques = HashSet::new();
                                 for o in objects.iter() {
-                                    uniques.insert(o.value.id().clone());
+                                    uniques.insert(o.value.id());
                                 }
 
                                 ok_200(&uniques.drain().collect::<Vec<_>>())

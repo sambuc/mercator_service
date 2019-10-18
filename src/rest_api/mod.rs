@@ -64,7 +64,7 @@ impl Filters {
         }
     }
 
-    pub fn space(&self, db: &mercator_db::DataBase) -> Result<Option<String>, HandlerResult> {
+    pub fn space(&self, db: &mercator_db::DataBase) -> Result<&Option<String>, HandlerResult> {
         if let Some(space_id) = &self.space {
             if !db.space_keys().contains(&space_id.to_string()) {
                 return Err(error_422(format!(
@@ -73,19 +73,17 @@ impl Filters {
                 )));
             }
         }
-        Ok(self.space.clone())
+        Ok(&self.space)
     }
 
-    pub fn resolution(&self) -> Option<Vec<u32>> {
-        self.resolution.clone()
+    pub fn resolution(&self) -> &Option<Vec<u32>> {
+        &self.resolution
     }
 
     pub fn volume(&self) -> Option<f64> {
         match &self.view_port {
             None => None,
-            Some((low, high)) => {
-                Some(Shape::BoundingBox(low.clone().into(), high.clone().into()).volume())
-            }
+            Some((low, high)) => Some(Shape::BoundingBox(low.into(), high.into()).volume()),
         }
     }
 }

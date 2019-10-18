@@ -22,7 +22,7 @@ fn get((core, state): (Path<String>, Data<RwLock<SharedState>>)) -> HandlerResul
     let core = core.to_string();
     let context = state.read().unwrap();
 
-    match context.db().core(core) {
+    match context.db().core(&core) {
         Ok(core) => ok_200(&Core::from(core)),
         Err(_) => error_404(),
     }
