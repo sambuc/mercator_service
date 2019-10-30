@@ -53,11 +53,11 @@ fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> Hand
                             parameters.resolution(),
                         ) {
                             Err(e) => return error_422(e),
-                            Ok(objects) => {
+                            Ok(v) => {
                                 // We have a list of SpaceObjects, so extract
                                 // the space Ids
-                                for o in objects {
-                                    results.insert(o.space_id);
+                                for (space_id, _) in v {
+                                    results.insert(space_id);
                                 }
                             }
                         }

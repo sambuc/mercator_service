@@ -62,7 +62,7 @@ fn query((parameters, state): (Json<Query>, Data<RwLock<SharedState>>)) -> Handl
                         parameters.resolution(),
                     ) {
                         Err(_) => vec![], // FIXME: Return errors here instead!!
-                        Ok(objects) => to_spatial_objects(context.db(), objects),
+                        Ok(objects) => to_spatial_objects(objects),
                     }
                 })
                 .collect::<Vec<_>>(),

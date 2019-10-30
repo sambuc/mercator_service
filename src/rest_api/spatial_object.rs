@@ -4,6 +4,7 @@ use actix_web::web;
 use actix_web::web::Data;
 use actix_web::web::Path;
 use mercator_db::CoreQueryParameters;
+use mercator_db::Properties;
 
 use crate::model::to_spatial_objects;
 use crate::shared_state::SharedState;
@@ -39,7 +40,20 @@ fn get((path, state): (Path<(String, String)>, Data<RwLock<SharedState>>)) -> Ha
     match db.core(&core) {
         Ok(core) => match core.get_by_id(&parameters, &id) {
             Ok(objects) => {
-                let results = to_spatial_objects(db, objects);
+                let value = Properties::Feature(id);
+                let tmp = objects
+                    .into_iter()
+                    .map(|(space, positions)| {
+                        let shapes = positions
+                            .into_iter()
+                            .map(|position| (position, &value))
+                            .collect();
+                        (space, shapes)
+                    })
+                    .collect();
+
+                let results = to_spatial_objects(tmp);
+
                 if results.is_empty() {
                     error_404()
                 } else {

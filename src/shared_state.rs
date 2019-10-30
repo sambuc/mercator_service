@@ -32,15 +32,15 @@ impl SharedState {
         &self.query_parser
     }
 
-    pub fn filter(
-        &self,
-        filter: &str,
-        core: &str,
-        output_space: &Option<String>,
+    pub fn filter<'q>(
+        &'q self,
+        filter: &'q str,
+        core: &'q str,
+        output_space: &'q Option<String>,
         volume: Option<f64>,
-        view_port: &Option<(Vec<f64>, Vec<f64>)>,
-        resolution: &Option<Vec<u32>>,
-    ) -> mercator_db::ResultSet {
+        view_port: &'q Option<(Vec<f64>, Vec<f64>)>,
+        resolution: &'q Option<Vec<u32>>,
+    ) -> mercator_db::ResultSet<'q> {
         let parser = self.filter_parser();
         let parse;
         let parameters = CoreQueryParameters {
@@ -92,14 +92,14 @@ impl SharedState {
         }
     }
 
-    pub fn query(
-        &self,
+    pub fn query<'q>(
+        &'q self,
         query: &str,
         core: &str,
         volume: Option<f64>,
-        view_port: &Option<(Vec<f64>, Vec<f64>)>,
-        resolution: &Option<Vec<u32>>,
-    ) -> mercator_db::ResultSet {
+        view_port: &'q Option<(Vec<f64>, Vec<f64>)>,
+        resolution: &'q Option<Vec<u32>>,
+    ) -> mercator_db::ResultSet<'q> {
         let parser = self.query_parser();
         let parse;
         let parameters = CoreQueryParameters {

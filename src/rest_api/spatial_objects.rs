@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::sync::RwLock;
 
@@ -31,13 +32,13 @@ fn post(
             Err(e) => e,
             Ok(space) => match parameters.filters() {
                 None => {
-                    let mut results = HashSet::new();
+                    let mut results = HashMap::new();
                     for property in core.keys().iter() {
-                        results.insert(property.id());
+                        results.insert(property.id(), property);
                     }
 
                     if parameters.ids_only() {
-                        ok_200(&results.drain().collect::<Vec<_>>())
+                        ok_200(&results.drain().map(|(k, _)| k).collect::<Vec<_>>())
                     } else {
                         let core_parameters = CoreQueryParameters {
                             db,
@@ -47,14 +48,27 @@ fn post(
                             resolution: parameters.resolution(),
                         };
 
-                        let objects = results
-                            .drain()
-                            .flat_map(|id| match core.get_by_id(&core_parameters, id) {
-                                Err(_) => vec![], // FIXME: Return error ?
-                                Ok(r) => r,
-                            })
-                            .collect::<Vec<_>>();
-                        let objects = to_spatial_objects(db, objects);
+                        let mut objects = vec![];
+                        for (id, properties) in results.drain() {
+                            match core.get_by_id(&core_parameters, id) {
+                                Err(_) => (), // FIXME: Return error ?
+                                Ok(r) => {
+                                    let mut tmp = r
+                                        .into_iter()
+                                        .map(|(space, positions)| {
+                                            let shapes = positions
+                                                .into_iter()
+                                                .map(|position| (position, properties))
+                                                .collect();
+                                            (space, shapes)
+                                        })
+                                        .collect();
+                                    objects.append(&mut tmp);
+                                }
+                            }
+                        }
+
+                        let objects = to_spatial_objects(objects);
 
                         ok_200(&objects)
                     }
@@ -72,13 +86,15 @@ fn post(
                         Ok(objects) => {
                             if parameters.ids_only() {
                                 let mut uniques = HashSet::new();
-                                for o in objects.iter() {
-                                    uniques.insert(o.value.id());
+                                for (_, v) in objects {
+                                    for (_, properties) in v {
+                                        uniques.insert(properties.id());
+                                    }
                                 }
 
                                 ok_200(&uniques.drain().collect::<Vec<_>>())
                             } else {
-                                let objects = to_spatial_objects(db, objects);
+                                let objects = to_spatial_objects(objects);
 
                                 ok_200(&objects)
                             }
