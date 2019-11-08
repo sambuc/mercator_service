@@ -187,6 +187,7 @@ macro_rules! get_app {
             .wrap(middleware::Logger::new(
                 r#"%a "%r" %s %b "%{Referer}i" "%{User-Agent}i" %T[s] %D[ms]"#,
             ))
+            .wrap(middleware::Compress::default())
             .wrap(get_cors())
             .configure(config)
             .default_service(
