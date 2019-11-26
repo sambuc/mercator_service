@@ -84,7 +84,7 @@ impl SharedState {
                 match execution {
                     Err(e) => {
                         debug!("Parsing failed: \n{:?}", e);
-                        Err(e.to_string())
+                        Err(e)
                     }
                     results @ Ok(_) => results,
                 }
@@ -145,7 +145,7 @@ impl SharedState {
                 match execution {
                     Err(e) => {
                         debug!("Parsing failed: \n{:?}", e);
-                        Err(e.to_string())
+                        Err(e)
                     }
                     results @ Ok(_) => results,
                 }

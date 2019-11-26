@@ -22,8 +22,8 @@ fn put(path: Path<String>) -> HandlerResult {
 fn get((path, state): (Path<(String, String)>, Data<RwLock<SharedState>>)) -> HandlerResult {
     trace!("GET '{:?}'", path);
     let (core, id) = path.into_inner();
-    let core = core.to_string();
-    let id = id.to_string();
+    let core = core;
+    let id = id;
     let context = state.read().unwrap();
     let db = context.db();
 
