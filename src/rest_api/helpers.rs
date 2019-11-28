@@ -15,7 +15,11 @@ where
     T: Serialize,
 {
     match serde_json::to_string(data) {
-        Ok(response) => Ok(Either::A(HttpResponse::Ok().body(response))),
+        Ok(response) => Ok(Either::A(
+            HttpResponse::Ok()
+                .content_type("application/json")
+                .body(response),
+        )),
         Err(e) => error_500(e),
     }
 }
