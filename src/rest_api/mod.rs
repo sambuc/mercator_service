@@ -23,23 +23,29 @@ use actix_web::http;
 use actix_web::http::StatusCode;
 use actix_web::middleware;
 use actix_web::web;
-use actix_web::web::Data;
-use actix_web::web::Path;
+pub use actix_web::web::Data;
 use actix_web::App;
 use actix_web::Either;
 use actix_web::HttpResponse;
 use actix_web::HttpServer;
 use mercator_db::space::Shape;
+use mercator_db::storage::model;
+use mercator_db::storage::model::v2::to_spatial_objects;
+use mercator_db::CoreQueryParameters;
+pub use mercator_db::DataBase;
+use mercator_db::Properties;
+use serde::Deserialize;
+use serde::Serialize;
 
-#[cfg(feature = "static-error-pages")]
-pub use helpers_static_pages::*;
+use crate::SharedState;
+
+pub use helpers::*;
 
 #[cfg(not(feature = "static-error-pages"))]
 pub use helpers_dynamic_pages::*;
 
-pub use helpers::*;
-
-use crate::SharedState;
+#[cfg(feature = "static-error-pages")]
+pub use helpers_static_pages::*;
 
 pub type HandlerResult = Result<Either<HttpResponse, NamedFile>, Error>;
 

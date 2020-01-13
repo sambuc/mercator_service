@@ -1,16 +1,16 @@
 use std::sync::RwLock;
 
-use actix_web::web;
-use actix_web::web::Data;
-use actix_web::web::Json;
-use actix_web::HttpResponse;
-
-use crate::model::to_spatial_objects;
-use crate::shared_state::SharedState;
+use serde::Deserialize;
 
 use super::error_422;
 use super::ok_200;
+use super::to_spatial_objects;
+use super::web;
+use super::web::Data;
+use super::web::Json;
 use super::HandlerResult;
+use super::HttpResponse;
+use super::SharedState;
 
 #[derive(Debug, Deserialize)]
 pub struct Query {

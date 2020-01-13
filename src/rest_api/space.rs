@@ -1,16 +1,14 @@
 use std::sync::RwLock;
 
-use actix_web::web;
-use actix_web::web::Data;
-use actix_web::web::Path;
-
-use crate::model;
-use crate::shared_state::SharedState;
-
 use super::error_400;
 use super::error_404;
+use super::model;
 use super::ok_200;
+use super::web;
+use super::web::Data;
+use super::web::Path;
 use super::HandlerResult;
+use super::SharedState;
 
 fn put(path: Path<String>) -> HandlerResult {
     trace!("POST '{:?}'", path);

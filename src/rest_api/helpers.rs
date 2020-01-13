@@ -2,13 +2,15 @@ use std::fmt::Debug;
 use std::io::Error;
 use std::io::ErrorKind;
 
-use actix_files::NamedFile;
-use actix_web::Either;
-use actix_web::HttpResponse;
 use serde::Serialize;
 
+use super::error_404;
+use super::web::Path;
+use super::Either;
 use super::HandlerResult;
-use super::*;
+use super::HttpResponse;
+use super::NamedFile;
+use super::StatusCode;
 
 pub fn ok_200<T>(data: &T) -> HandlerResult
 where

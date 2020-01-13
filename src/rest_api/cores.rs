@@ -1,18 +1,16 @@
 use std::collections::HashSet;
 use std::sync::RwLock;
 
-use actix_web::web;
-use actix_web::web::Data;
-use actix_web::web::Json;
-
-use crate::shared_state::SharedState;
-
 use super::error_400;
 use super::error_422;
 use super::ok_200;
+use super::web;
+use super::web::Data;
+use super::web::Json;
 use super::Core;
 use super::Filters;
 use super::HandlerResult;
+use super::SharedState;
 
 fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> HandlerResult {
     trace!("POST '{:?}'", parameters);

@@ -2,21 +2,19 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::sync::RwLock;
 
-use actix_web::web;
-use actix_web::web::Data;
-use actix_web::web::Json;
-use actix_web::web::Path;
-use mercator_db::CoreQueryParameters;
-
-use crate::model::to_spatial_objects;
-use crate::shared_state::SharedState;
-
 use super::error_400;
 use super::error_404;
 use super::error_422;
 use super::ok_200;
+use super::to_spatial_objects;
+use super::web;
+use super::web::Data;
+use super::web::Json;
+use super::web::Path;
+use super::CoreQueryParameters;
 use super::Filters;
 use super::HandlerResult;
+use super::SharedState;
 
 fn post(
     (core_id, parameters, state): (Path<String>, Json<Filters>, Data<RwLock<SharedState>>),

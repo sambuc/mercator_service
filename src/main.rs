@@ -1,20 +1,16 @@
 #[macro_use]
 extern crate measure_time;
 
-#[macro_use]
-extern crate serde_derive;
-
 mod rest_api;
 mod shared_state;
 
 use std::process::exit;
 use std::sync::RwLock;
 
-use actix_web::web::Data;
 use glob::glob;
-use mercator_db::json::model;
-use mercator_db::DataBase;
 
+use rest_api::Data;
+use rest_api::DataBase;
 use shared_state::SharedState;
 
 /*

@@ -1,18 +1,16 @@
 use std::sync::RwLock;
 
-use actix_web::web;
-use actix_web::web::Data;
-use actix_web::web::Path;
-use mercator_db::CoreQueryParameters;
-use mercator_db::Properties;
-
-use crate::model::to_spatial_objects;
-use crate::shared_state::SharedState;
-
 use super::error_400;
 use super::error_404;
 use super::ok_200;
+use super::to_spatial_objects;
+use super::web;
+use super::web::Data;
+use super::web::Path;
+use super::CoreQueryParameters;
 use super::HandlerResult;
+use super::Properties;
+use super::SharedState;
 
 fn put(path: Path<String>) -> HandlerResult {
     trace!("PUT '{:?}'", path);

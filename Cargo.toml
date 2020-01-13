@@ -34,8 +34,7 @@ memmap = "^0.7"
 mercator_db = "^0.1"
 mercator_parser = "^0.1"
 
-serde = "^1.0"
-serde_derive = "^1.0"
+serde = { version = "^1.0", features = ["derive"] }
 serde_json = "^1.0"
 bincode = "^1.1"
 
