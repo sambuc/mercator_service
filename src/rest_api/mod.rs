@@ -210,7 +210,7 @@ pub fn run(host: &str, port: u16, state: Data<RwLock<SharedState>>) {
     // Create & run the server.
     match HttpServer::new(move || get_app!(state))
         .bind(format!("{}:{}", host, port))
-        .unwrap()
+        .unwrap_or_else(|e| panic!("Failed to bind to `{}:{}`: {}", host, port, e))
         .run()
     {
         Ok(_) => info!("Server Stopped!"),

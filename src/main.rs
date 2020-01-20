@@ -100,9 +100,12 @@ fn main() {
     let db;
     // Load a Database:
     {
+        // Load all the index contained in the folder, and fail if anyone of
+        // those is corrupted / incompatible.
         info_time!("Loading database index");
 
-        db = DataBase::load(&datasets).unwrap();
+        db = DataBase::load(&datasets)
+            .unwrap_or_else(|e| panic!("Error while loading indices: {}", e));
     }
 
     rest_api::run(

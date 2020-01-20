@@ -18,7 +18,9 @@ fn put(path: Path<String>) -> HandlerResult {
 fn get((core, state): (Path<String>, Data<RwLock<SharedState>>)) -> HandlerResult {
     trace!("GET '{:?}'", core);
     let core = core.to_string();
-    let context = state.read().unwrap();
+    let context = state
+        .read()
+        .unwrap_or_else(|e| panic!("Can't acquire read lock of the database: {}", e));
 
     match context.db().core(&core) {
         Ok(core) => ok_200(&Core::from(core)),

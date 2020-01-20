@@ -22,7 +22,9 @@ fn get((path, state): (Path<(String, String)>, Data<RwLock<SharedState>>)) -> Ha
     let (core, id) = path.into_inner();
     let core = core;
     let id = id;
-    let context = state.read().unwrap();
+    let context = state
+        .read()
+        .unwrap_or_else(|e| panic!("Can't acquire read lock of the database: {}", e));
     let db = context.db();
 
     // FIXME: Should we allow setting the resolution/threshold_volume?

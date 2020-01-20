@@ -21,7 +21,9 @@ fn post(
 ) -> HandlerResult {
     trace!("POST '{:?}', {:?}", parameters, core_id);
     let core_id = core_id.to_string();
-    let context = state.read().unwrap();
+    let context = state
+        .read()
+        .unwrap_or_else(|e| panic!("Can't acquire read lock of the database: {}", e));
     let db = context.db();
 
     match db.core(&core_id) {

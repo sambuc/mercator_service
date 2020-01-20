@@ -14,7 +14,9 @@ use super::SharedState;
 
 fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> HandlerResult {
     trace!("POST '{:?}'", parameters);
-    let context = state.read().unwrap();
+    let context = state
+        .read()
+        .unwrap_or_else(|e| panic!("Can't acquire read lock of the database: {}", e));
     let db = context.db();
 
     match parameters.space(db) {

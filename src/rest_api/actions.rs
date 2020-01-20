@@ -42,7 +42,9 @@ pub fn health() -> HttpResponse {
 
 fn query((parameters, state): (Json<Query>, Data<RwLock<SharedState>>)) -> HandlerResult {
     trace!("POST '{:?}'", parameters);
-    let context = state.read().unwrap();
+    let context = state
+        .read()
+        .unwrap_or_else(|e| panic!("Can't acquire read lock of the database: {}", e));
     let query = parameters.query();
 
     if query.is_empty() {
