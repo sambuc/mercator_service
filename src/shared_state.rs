@@ -53,7 +53,7 @@ impl SharedState {
 
         // Parse Input
         {
-            info_time!("Parsing");
+            debug_time!("Parsing");
             parse = parser.parse(filter);
         }
 
@@ -68,7 +68,7 @@ impl SharedState {
 
                 // Check type coherence & validate tree
                 {
-                    info_time!("Type check");
+                    debug_time!("Type check");
                     validation = tree.validate();
                 }
                 if validation.is_err() {
@@ -112,7 +112,7 @@ impl SharedState {
 
         // Parse Input
         {
-            info_time!("Parsing");
+            debug_time!("Parsing");
             parse = parser.parse(query);
         }
         match parse {
@@ -127,7 +127,7 @@ impl SharedState {
 
                 // Check type coherence & validate tree
                 {
-                    info_time!("Type check");
+                    debug_time!("Type check");
                     validation = tree.validate();
                 }
                 if validation.is_err() {
