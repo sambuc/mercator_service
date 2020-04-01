@@ -1,0 +1,503 @@
+openapi: "3.0.0"
+info:
+  title: Spatial Search Backend API Documentation
+  description: API Documentation for the spatial search backend.
+  termsOfService: "" #urn:tos FIXME: Describe ToS?
+  license:
+    name: The MIT License
+    url: https://opensource.org/licenses/MIT
+  version: "1.0"
+
+servers:
+  - url: http://127.0.0.1:8888/spatial-search
+
+tags:
+  - name: Actions
+    description: General Database actions.
+  - name: Spaces
+    description: Operations on Reference Spaces.
+  - name: Cores
+    description: Operations on Cores.
+  - name: Spatial Objects
+    description: Operations on Spatial Objects.
+
+paths:
+  #--------------------------------------------------------------------
+  # GENERAL ACTIONS ON THE SYSTEM
+  #--------------------------------------------------------------------
+  /health:
+    get:
+      tags: [Actions]
+      summary: >
+        Health check of the service.
+      description: >
+        Please note that making anything but a **GET** call is a bad request, and will return a 405.
+      operationId: get_health_check
+      responses:
+        '200':
+          $ref: '#/components/responses/Standard200'
+        default:
+          $ref: '#/components/responses/Standard405'
+
+  /query:
+    post:
+      tags: [Actions]
+      summary: >
+        Execute an arbitrary query.
+      #description: >
+      #  This is a POST operation, as it "creates" and execute a query, and it is not idempotent as the same query re-run multiple times might have different results, depending on the state of the database.
+      operationId: query
+      requestBody:
+        $ref: '#/components/requestBodies/Query'
+      responses:
+        '200':
+          $ref: '#/components/responses/Query200'
+        '422':
+          $ref: '#/components/responses/Standard422'
+        default:
+          $ref: '#/components/responses/Standard405'
+
+  #--------------------------------------------------------------------
+  # SPACES QUERIES
+  #--------------------------------------------------------------------
+  /spaces:
+
+    post:
+      tags: [Spaces]
+      summary: >
+        Retrieve a list of space definition names.
+      operationId: post_spaces
+      requestBody:
+        $ref: '#/components/requestBodies/Filters'
+      responses:
+        '200':
+          $ref: '#/components/responses/ArrayOfStrings'
+        '422':
+          $ref: '#/components/responses/Standard422'
+        default:
+          $ref: '#/components/responses/Standard400'
+
+  /spaces/{name}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceName'
+
+    get:
+      tags: [Spaces]
+      summary: >
+        Retrieve the space `name`.
+      operationId: get_space
+      responses:
+        '200':
+          $ref: '#/components/responses/Space200'
+        '404':
+          $ref: '#/components/responses/Standard404'
+        default:
+          $ref: '#/components/responses/Standard400'
+
+  #--------------------------------------------------------------------
+  # CORE QUERIES
+  #--------------------------------------------------------------------
+  /cores:
+
+    post:
+      tags: [Cores]
+      summary: >
+        Retrieve a list of core names.
+      operationId: post_cores
+      requestBody:
+        $ref: '#/components/requestBodies/Filters'
+      responses:
+        '200':
+          $ref: '#/components/responses/ArrayOfStrings'
+        '422':
+          $ref: '#/components/responses/Standard422'
+        default:
+          $ref: '#/components/responses/Standard400'
+
+  /cores/{name}:
+    parameters:
+      - $ref: '#/components/parameters/CoreName'
+
+    get:
+      tags: [Cores]
+      summary: >
+        Retrieve the core `name` properties. This does not include
+          the SpatialObjects contained in this Core.
+      operationId: get_core
+      responses:
+        '200':
+          $ref: '#/components/responses/Core200'
+        '404':
+          $ref: '#/components/responses/Standard404'
+        default:
+          $ref: '#/components/responses/Standard400'
+
+  #--------------------------------------------------------------------
+  # SPATIAL_OBJECTS QUERIES
+  #--------------------------------------------------------------------
+  /cores/{name}/spatial_objects:
+    parameters:
+      - $ref: '#/components/parameters/CoreName'
+
+    post:
+      tags: [Spatial Objects]
+      summary: >
+        Retrieve a list of spatial object.
+      operationId: post_spatial_objects
+      requestBody:
+        $ref: '#/components/requestBodies/Filters'
+      responses:
+        '200':
+          $ref: '#/components/responses/ArrayOfStrings'
+        '422':
+          $ref: '#/components/responses/Standard422'
+        default:
+          $ref: '#/components/responses/Standard400'
+
+  /cores/{name}/spatial_objects/{id}:
+    parameters:
+      - $ref: '#/components/parameters/CoreName'
+      - $ref: '#/components/parameters/SpatialObjectId'
+
+    get:
+      tags: [Spatial Objects]
+      summary: >
+        Retrieve the spatial object `id` of the core `name`.
+      operationId: get_spatial_object
+      responses:
+        '200':
+          $ref: '#/components/responses/SpatialObject200'
+        '404':
+          $ref: '#/components/responses/Standard404'
+        default:
+          $ref: '#/components/responses/Standard400'
+
+components:
+  requestBodies:
+    Filters:
+      description: >
+        Filter string  to use to select the data.
+
+        For more about the filter syntax, please refer to [filter grammar](https://epfl-dias.github.io/mercator_parser/filters.html).
+
+        If **ids_only** is true, then a list of **unique identifiers** is returned, instead of the whole, distinct, objects for the selected objects.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              filters:
+                type: string
+              ids_only:
+                type: boolean
+                default: false
+              space:
+                type: string
+              resolution:
+                type: array
+                items:
+                  type: number
+                  minimum: 0
+                  format: int32
+              view_port:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
+
+    Query:
+      description: >
+        For more about the query syntax, please refer to the [query grammar](https://epfl-dias.github.io/mercator_parser/queries.html).
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              query:
+                type: string
+              resolution:
+                type: array
+                items:
+                  type: number
+                  minimum: 0
+                  format: int32
+              view_port:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
+
+  parameters:
+    SpaceName:
+      name: name
+      in: path
+      required: true
+      description: >
+        Name of the reference space
+      type: string
+
+    CoreName:
+      name: name
+      in: path
+      required: true
+      description: >
+        Name of the core
+      type: string
+
+    SpatialObjectId:
+      name: id
+      in: path
+      required: true
+      description: >
+        Id of the spatial object
+      type: string
+
+  responses:
+    Space200:
+      description: >
+        Reference space definition.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Space'
+
+    SpatialObject200:
+      description: >
+        Spatial object.
+      schema:
+        $ref: '#/components/schemas/SpatialObject'
+
+    Core200:
+      description: >
+        Core properties
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Core'
+
+    Query200:
+      description: Arbitrary query.
+
+    ArrayOfStrings:
+      description: >
+        Array of strings, usually identifiers.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              type: string
+
+    Standard422:
+      description: >
+        Unprocessable Entity
+    Standard405:
+      description: >
+        Invalid Method
+    Standard404:
+      description: >
+        Object not found
+    Standard400:
+      description: >
+        Invalid or malformed request
+    Standard200:
+      description: OK
+
+  schemas:
+    #--------------------------------------------------------------------
+    # Types returned / accepted by the API
+    #--------------------------------------------------------------------
+    Space:
+      title: Reference Space
+      description: >
+        Definition of a space, in which objects are described.
+      type: object
+      properties:
+        name:
+          description: >
+            Unique Id for the space, which can also be used to generate a link to the user documentation describing the space, explaining the semantic meaning of the values stored, as well as the definitions of the axes.
+          type: string
+        origin:
+          description: >
+            Translation vector between the Universe origin to the origin of this reference space. This is expressed in Universe coordinates.
+          type: array
+          items:
+            type: number
+        axes:
+          description: >
+            The order of the axes matter and MUST be kept, as this is also linked to the definition found in the documentation.
+
+
+            Coordinate of a point MUST always be expressed using the same order as defined here.
+          type: array
+          items:
+            $ref: '#/components/schemas/Axis'
+
+    SpatialObject:
+      title: Spatial Object
+      description: >
+        Collection of positions in a space, which share a common set of properties.
+      type: object
+      properties:
+        properties:
+          description: >
+            Properties tied to a shape, in other words properties valid for the whole content of the shape.
+          type: object
+          properties:
+            type:
+              description: >
+                Label defining the kind of the spatial object.
+              type: string
+            id:
+              description: >
+                Identifier of this spatial object.
+              type: string
+        volumes:
+          description: >
+            List of volumes, overlapping or not, which define the whole space covered by this spatial object.
+
+            The overall volume described here is the **union** of the volumes.
+          type: array
+          items:
+            type: object
+            properties:
+              space:
+                description: >
+                  Name of the reference space the associated shapes are defined in.
+                type: string
+              shapes:
+                description: >
+                  List of shapes.
+                type: array
+                items:
+                  type: object
+                  description: >
+                    One of the following fields per instance.
+                  properties:
+                    points:
+                      description: >
+                        List of points.
+                      example: [[1, 2], [2, 3], [6, 1]]
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Point'
+                    boundingboxes:
+                      description: >
+                        List of bounding boxes.
+                      example: [
+                      [ [1, 2], [2, 3] ],
+                      [ [-1, 0], [20, 10] ],
+                      [ [0, 0], [4, 9] ],
+                      ]
+                      type: array
+                      items:
+                        type: array
+                        minItems: 2
+                        maxitems: 2
+                        items:
+                          $ref: '#/components/schemas/Point'
+                    hyperspheres:
+                      description: >
+                        List of hyperspheres, each hypersphere is described as tuple (position, radius)
+                      example: [
+                      [ [1, 2], 3 ],
+                      [ [-1, 0], 4 ],
+                      [ [0, 0], 23 ],
+                      ]
+                      type: array
+                      items:
+                        type: array
+                        minItems: 2
+                        maxitems: 2
+                        items:
+                          type: {}
+
+    Core:
+      title: Core
+      description: >
+        Collection of Spatial Objects, stored in one or more Reference Spaces.
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        scales:
+          title: Scale Vectors
+          description: >
+            Scale factors used to generate less precise, coarser indexes in order to speed up queries over large volumes of the space.
+
+
+            Values are expressed as powers of two, in the range [0;n]. For each scale, a whole vector providing values for each axis MUST be provided.
+
+
+            Values, which are equal, and whose coordinates gets merged are merged as well, to reduce the number of results.
+
+
+            Distinct values whose coordinates are merged are recorded, thus allowing the user to move from one scale factor to another, with a finer resolution smoothly.
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              minimum: 0
+              format: int32
+
+    #--------------------------------------------------------------------
+    # Helper types
+    #--------------------------------------------------------------------
+    Point:
+      description: >
+        One valid value for each axes of the reference space this point
+          is used in.
+      type: array
+      items:
+        type: number
+
+    Axis:
+      title: Coordinate Axis
+      description: >
+        Defines the properties of an axis. The origin and unit vectors or defined within the universe space, but this does NOT imply a linear conversion is possible, this only provide anchoring of the axis as well as its absolute direction.
+      type: object
+      properties:
+        measurement_unit:
+          description: >
+            Length unit, as in SI Unit, for the `1.0` value on this axis.
+
+            For example [mm], [s], [um].
+          type: string
+        graduation:
+          description: >
+            Definition of the valid coordinate values which can be used on this axis.
+          type: object
+          properties:
+            set:
+              description: >
+                Valid numbers as defined by the usual mathematical sets, for example
+                  * N: Natural numbers,
+                  * Z: Integers,
+                  * Q: Rational numbers,
+                  * R: Real numbers.
+              type: string
+              # Decision: For now we leave it at strictly numbers, no
+              #           categories until actually needed.
+              enum: [N, Z, Q, R]
+            minimum:
+              type: number
+              format: float
+            maximum:
+              type: number
+              format: float
+            steps:
+              type: number
+              format: integer
+        unit_vector:
+          description: >
+            Direction vector, with a norm of 1.0. This is expressed in Universe coordinates and provides the orientation of this axis in the Universe.
+          type: array
+          items:
+            type: number

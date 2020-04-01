@@ -18,17 +18,9 @@ This enables the index implementations to be agnostic from the underlying data s
 
 ## Requirements
 
-### Hardware
-
- * **Processor:** XGHz CPU
- * **RAM:** Y MB per MB of indexed data
- * **Available storage space:** X MB per MB of indexed data
-
 ### Software
 
  * Rust: https://www.rust-lang.org
-
-## Quick start
 
 ## Building from sources
 
@@ -38,44 +30,107 @@ To build this project, you will need to run the following:
 cargo build --release
 ```
 
-### Installation
+## Installation
 
-To install the software on the system you can use:
+To install the software on the system, after checking out the
+dependencies you can use:
 
 ```sh
-cargo install --release
+cargo install --path .
 ```
 
-### Usage
+## Usage
 
-In order to configure the behavior of the service, there is couple of environment variables:
+In order to configure the behavior of the service, there is couple of
+environment variables, in bold their default values:
 
-* `RUST_LOG`: Set the level of logging, for example (**error**, **warn**, **info**, **debug**, **trace**). This can be controlled per subsystem of the service, or globally by specifying th subsystem and the level in a list, or omitting the subsystem part. For example:
-  ```sh
-  RUST_LOG="actix_web=debug,mercator_service=trace" # Set actix_web to debug, mercator_service to trace
-  RUST_LOG="trace" # Set everything to trace
-  ```
+* `RUST_LOG` = `info`:
 
-* `MERCATOR_HOST`: Name or IP address to bind to.
-* `MERCATOR_PORT`: Port on which to listen.
-* `MERCATOR_BASE`: Prefix du service web.
-* `MERCATOR_ALLOWED_ORIGINS`: Allowed origins for CORS requests:
-  ```sh
-  MERCATOR_ALLOWED_ORIGINS="http://localhost:3200,http://localhost:3201, http://localhost:3202"
-  ```
+   Set the level of logging, for example (**error**, **warn**, **info**,
+   **debug**, **trace**). This can be controlled per subsystem of the
+   service, or globally by specifying th subsystem and the level in a
+   list, or omitting the subsystem part.
 
-* `MERCATOR_DATA`: Provide the root folder of the data sets to expose.
+   For example:
 
-Complete example of a run:
+   ```sh
+   # Set actix_web to debug, mercator_service to trace,
+   # fall back to info for everything else:
+   RUST_LOG="info,actix_web=debug,mercator_service=trace"
+
+   # Set everything to trace
+   RUST_LOG="trace"
+   ```
+
+   [More details](https://epfl-dias.github.io/mercator_service/env_logger/index.html)
+   on how to control the logs.
+
+* `MERCATOR_HOST` = **0.0.0.0** :
+
+   Name or IP address to bind to.
+
+* `MERCATOR_PORT` = **8888** :
+
+   Port on which to listen.
+
+* `MERCATOR_BASE` = **/spatial-search** :
+
+   Web service URL prefix.
+
+* `MERCATOR_ALLOWED_ORIGINS` = **http://localhost:3200** :
+
+   Allowed origins for CORS requests.
+
+* `MERCATOR_DATA` = **.**:
+
+   Provide the root folder of the data sets to expose.
+
+### Example
+
 ```sh
-RUST_LOG="warn,actix_web=info,mercator_service=trace" MERCATOR_DATA="../mercator_indexer" MERCATOR_ALLOWED_ORIGINS="http://localhost:3200,http://localhost:3201, http://localhost:3202" cargo run --release
+RUST_LOG="warn,actix_web=info,mercator_service=trace" \
+    MERCATOR_HOST="mercator.example.org" \
+    MERCATOR_PORT="1234" \
+    MERCATOR_BASE="/" \
+    MERCATOR_DATA="../mercator_indexer" \
+    MERCATOR_ALLOWED_ORIGINS="http://localhost:3200,http://localhost:3201, http://localhost:3202" \
+    mercator_service
 ```
 
 ## Documentation
 
-For more information, please refer to the [documentation](https://epfl-dias.github.io/mercator_service/).
+### User documentation
 
-If you want to build the documentation and access it locally, you can use:
+By this, we mean the REST API documentation. To access it and be able
+to test it live you can use the following procedure:
+
+ 1. Install [docker](https://www.docker.com).
+ 2. Start mercator_service, making sure there is the `static` folder,
+    or a symlink to it, in the current working directory.
+ 3. Start swagger to have access to the live documentation:
+
+    ```sh
+    docker run \
+        --rm \
+        -p 3200:8080 \
+        -e API_URL='http://127.0.0.1:8888/spatial-search/static/api/v1.0.yaml' \
+        swaggerapi/swagger-ui
+    ```
+
+ 4. Using your web navigator, got to [http://localhost:3200](http://localhost:3200).
+ 5. You have the whole user documentation accessible, and you can
+    trigger actions on your live mercator_service instance, running
+    queries on your data.
+
+Otherwise you can read `static/api/v1.0.yaml` directly.
+
+### Developer documentation
+
+For people looking at the internal structure, you can use the
+[developer documentation](https://epfl-dias.github.io/mercator_service/).
+
+If you want to build this documentation and access it locally, you can
+use:
 
 ```sh
 cargo doc --open
