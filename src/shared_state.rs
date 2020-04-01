@@ -1,9 +1,9 @@
 use mercator_db::CoreQueryParameters;
 use mercator_db::DataBase;
-use parser::Executor;
-use parser::FiltersParser;
-use parser::QueryParser;
-use parser::Validator;
+use mercator_parser::Executor;
+use mercator_parser::FiltersParser;
+use mercator_parser::QueryParser;
+use mercator_parser::Validator;
 
 pub struct SharedState {
     db: DataBase,
