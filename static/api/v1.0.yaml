@@ -178,7 +178,7 @@ components:
       description: >
         Filter string  to use to select the data.
 
-        For more about the filter syntax, please refer to [filter grammar](https://epfl-dias.github.io/mercator_parser/filters.html).
+        For more about the filter syntax, please refer to [filter grammar](https://epfl-dias.github.io/mercator_parser/book/filters.html).
 
         If **ids_only** is true, then a list of **unique identifiers** is returned, instead of the whole, distinct, objects for the selected objects.
       required: true
@@ -209,7 +209,7 @@ components:
 
     Query:
       description: >
-        For more about the query syntax, please refer to the [query grammar](https://epfl-dias.github.io/mercator_parser/queries.html).
+        For more about the query syntax, please refer to the [query grammar](https://epfl-dias.github.io/mercator_parser/book/queries.html).
       required: true
       content:
         application/json:
