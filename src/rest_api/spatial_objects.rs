@@ -1,12 +1,12 @@
-use std::collections::HashMap;
 use std::collections::HashSet;
 use std::sync::RwLock;
 
 use super::error_400;
 use super::error_404;
 use super::error_422;
+use super::from_properties_by_spaces;
+use super::from_spaces_by_properties;
 use super::ok_200;
-use super::to_spatial_objects;
 use super::web;
 use super::web::Data;
 use super::web::Json;
@@ -16,7 +16,7 @@ use super::Filters;
 use super::HandlerResult;
 use super::SharedState;
 
-fn post(
+async fn post(
     (core_id, parameters, state): (Path<String>, Json<Filters>, Data<RwLock<SharedState>>),
 ) -> HandlerResult {
     trace!("POST '{:?}', {:?}", parameters, core_id);
@@ -32,13 +32,15 @@ fn post(
             Err(e) => e,
             Ok(space) => match parameters.filters() {
                 None => {
-                    let mut results = HashMap::new();
-                    for property in core.keys().iter() {
-                        results.insert(property.id(), property);
-                    }
-
                     if parameters.ids_only() {
-                        ok_200(&results.drain().map(|(k, _)| k).collect::<Vec<_>>())
+                        // keys() contains unique values only.
+                        let ids = core
+                            .keys()
+                            .iter()
+                            .map(|properties| properties.id())
+                            .collect::<Vec<_>>();
+
+                        ok_200(&ids)
                     } else {
                         let core_parameters = CoreQueryParameters {
                             db,
@@ -48,40 +50,33 @@ fn post(
                             resolution: parameters.resolution(),
                         };
 
-                        let mut objects = vec![];
-                        for (id, properties) in results.drain() {
-                            match core.get_by_id(&core_parameters, id) {
-                                Err(_) => (), // FIXME: Return error ?
-                                Ok(r) => {
-                                    let mut tmp = r
-                                        .into_iter()
-                                        .map(|(space, positions)| {
-                                            let shapes = positions
-                                                .into_iter()
-                                                .map(|position| (position, properties))
-                                                .collect();
-                                            (space, shapes)
-                                        })
-                                        .collect();
-                                    objects.append(&mut tmp);
+                        let objects_by_spaces =
+                            Box::new(core.keys().iter().filter_map(|property| {
+                                match core.get_by_id(&core_parameters, property.id()) {
+                                    Err(_) => None, // FIXME: Return error ?
+                                    Ok(positions_by_spaces) => {
+                                        Some((property, positions_by_spaces))
+                                    }
                                 }
-                            }
-                        }
-
-                        let objects = to_spatial_objects(objects);
-
-                        ok_200(&objects)
+                            }));
+                        ok_200(&from_spaces_by_properties(objects_by_spaces).collect::<Vec<_>>())
                     }
                 }
                 Some(filter) => {
-                    match context.filter(
-                        filter,
-                        &core_id,
-                        space,
-                        parameters.volume(),
-                        &parameters.view_port,
-                        parameters.resolution(),
-                    ) {
+                    let core_parameters = CoreQueryParameters {
+                        db,
+                        output_space: space.as_ref().map(String::as_str),
+                        threshold_volume: parameters.volume(),
+                        view_port: &parameters.view_port,
+                        resolution: parameters.resolution(),
+                    };
+
+                    let tree = match context.filter(filter) {
+                        Err(e) => return error_422(e),
+                        Ok(bag) => bag,
+                    };
+
+                    let r = match context.execute(&tree, &core_id, &core_parameters) {
                         Err(e) => error_422(e),
                         Ok(objects) => {
                             if parameters.ids_only() {
@@ -94,29 +89,29 @@ fn post(
 
                                 ok_200(&uniques.drain().collect::<Vec<_>>())
                             } else {
-                                let objects = to_spatial_objects(objects);
-
-                                ok_200(&objects)
+                                ok_200(&from_properties_by_spaces(objects).collect::<Vec<_>>())
                             }
                         }
-                    }
+                    };
+
+                    r
                 }
             },
         },
     }
 }
 
-fn put() -> HandlerResult {
+async fn put() -> HandlerResult {
     trace!("PUT Triggered!");
     error_400()
 }
 
-fn patch() -> HandlerResult {
+async fn patch() -> HandlerResult {
     trace!("PATCH Triggered!");
     error_400()
 }
 
-fn delete() -> HandlerResult {
+async fn delete() -> HandlerResult {
     trace!("DELETE Triggered!");
     error_400()
 }
@@ -137,45 +132,45 @@ mod routing {
 
     // FIXME: Add Body to request to see difference between (in)valid bodied requests
 
-    #[test]
-    fn post() {
-        expect_200(Method::POST, &get_objects(""));
-        json::expect_200(Method::POST, &get_objects(""), "".to_string());
+    #[actix_web::test]
+    async fn post() {
+        expect_200(TestRequest::post(), &get_objects("")).await;
+        json::expect_200(TestRequest::post(), &get_objects(""), "".to_string()).await;
 
-        json::expect_422(Method::POST, &get_objects(""), "".to_string());
+        json::expect_422(TestRequest::post(), &get_objects(""), "".to_string()).await;
 
-        expect_400(Method::POST, &get_objects(""));
+        expect_400(TestRequest::post(), &get_objects("")).await;
     }
 
-    #[test]
-    fn put() {
-        json::expect_200(Method::PUT, &get_objects(""), "".to_string());
+    #[actix_web::test]
+    async fn put() {
+        json::expect_200(TestRequest::put(), &get_objects(""), "".to_string()).await;
 
-        json::expect_422(Method::PUT, &get_objects(""), "".to_string());
+        json::expect_422(TestRequest::put(), &get_objects(""), "".to_string()).await;
 
-        expect_400(Method::PUT, &get_objects(""));
+        expect_400(TestRequest::put(), &get_objects("")).await;
     }
 
-    #[test]
-    fn patch() {
-        json::expect_200(Method::PATCH, &get_objects(""), "".to_string());
+    #[actix_web::test]
+    async fn patch() {
+        json::expect_200(TestRequest::patch(), &get_objects(""), "".to_string()).await;
 
-        json::expect_422(Method::PATCH, &get_objects(""), "".to_string());
+        json::expect_422(TestRequest::patch(), &get_objects(""), "".to_string()).await;
 
-        expect_400(Method::PATCH, &get_objects(""));
+        expect_400(TestRequest::patch(), &get_objects("")).await;
     }
 
-    #[test]
-    fn delete() {
-        json::expect_200(Method::DELETE, &get_objects(""), "".to_string());
+    #[actix_web::test]
+    async fn delete() {
+        json::expect_200(TestRequest::delete(), &get_objects(""), "".to_string()).await;
 
-        json::expect_422(Method::DELETE, &get_objects(""), "".to_string());
+        json::expect_422(TestRequest::delete(), &get_objects(""), "".to_string()).await;
 
-        expect_400(Method::DELETE, &get_objects(""));
+        expect_400(TestRequest::delete(), &get_objects("")).await;
     }
 
-    #[test]
-    fn get() {
-        expect_405(Method::GET, &get_objects(""));
+    #[actix_web::test]
+    async fn get() {
+        expect_405(TestRequest::get(), &get_objects("")).await;
     }
 }

@@ -17,7 +17,7 @@ where
     T: Serialize,
 {
     match serde_json::to_string(data) {
-        Ok(response) => Ok(Either::A(
+        Ok(response) => Ok(Either::Left(
             HttpResponse::Ok()
                 .content_type("application/json")
                 .body(response),
@@ -30,7 +30,7 @@ pub fn error_422<S>(reason: S) -> HandlerResult
 where
     S: Debug,
 {
-    Ok(Either::A(HttpResponse::UnprocessableEntity().body(
+    Ok(Either::Left(HttpResponse::UnprocessableEntity().body(
         format!("422 - Unprocessable Entity:\n{:?}", reason),
     )))
 }
@@ -50,7 +50,7 @@ where
 //    error_400()
 //}
 
-pub fn page_404() -> HandlerResult {
+pub async fn page_404() -> HandlerResult {
     trace!("404 Triggered!");
     error_404()
 }
@@ -60,7 +60,7 @@ pub fn page_404() -> HandlerResult {
 //    error_405()
 //}
 
-pub fn api(path: Path<String>) -> Result<NamedFile, Error> {
+pub async fn api(path: Path<String>) -> Result<NamedFile, Error> {
     trace!("api/{} Triggered!", path);
 
     match NamedFile::open(format!("static/api/{}", path).as_str()) {
@@ -71,7 +71,7 @@ pub fn api(path: Path<String>) -> Result<NamedFile, Error> {
     }
 }
 
-pub fn static_file(path: Path<String>) -> Result<NamedFile, Error> {
+pub async fn static_file(path: Path<String>) -> Result<NamedFile, Error> {
     trace!("static/{} Triggered!", path);
 
     match NamedFile::open(format!("static/{}", path).as_str()) {
@@ -85,10 +85,9 @@ pub fn static_file(path: Path<String>) -> Result<NamedFile, Error> {
 #[cfg(test)]
 mod tests {
     use super::super::tests_utils::*;
-    use super::*;
 
-    #[test]
-    fn page_400() {
-        // expect_400(Method::PATCH, get_core(INSTANCE_INVALID));
+    #[actix_web::test]
+    async fn page_400() {
+        expect_400(TestRequest::patch(), &get_core(INVALID_CORE)).await;
     }
 }

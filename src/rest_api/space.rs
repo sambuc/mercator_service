@@ -10,12 +10,12 @@ use super::web::Path;
 use super::HandlerResult;
 use super::SharedState;
 
-fn put(path: Path<String>) -> HandlerResult {
+async fn put(path: Path<String>) -> HandlerResult {
     trace!("POST '{:?}'", path);
     error_400()
 }
 
-fn get((path, state): (Path<String>, Data<RwLock<SharedState>>)) -> HandlerResult {
+async fn get((path, state): (Path<String>, Data<RwLock<SharedState>>)) -> HandlerResult {
     trace!("GET '{:?}'", path);
     let name = path.to_string();
     let context = state
@@ -31,12 +31,12 @@ fn get((path, state): (Path<String>, Data<RwLock<SharedState>>)) -> HandlerResul
     }
 }
 
-fn patch(path: Path<String>) -> HandlerResult {
+async fn patch(path: Path<String>) -> HandlerResult {
     trace!("PATCH Triggered on {}", path);
     error_400()
 }
 
-fn delete(path: Path<String>) -> HandlerResult {
+async fn delete(path: Path<String>) -> HandlerResult {
     trace!("DELETE Triggered on {}", path);
     error_400()
 }
@@ -60,35 +60,35 @@ mod routing {
 
     // FIXME: Add Body to request to see difference between (in)valid bodied requests
 
-    #[test]
-    fn put() {
-        json::expect_200(Method::PUT, &get_space(INSTANCE_EXISTS), "".to_string());
-        json::expect_422(Method::PUT, &get_space(INSTANCE_EXISTS), "".to_string());
-        json::expect_200(Method::PUT, &get_space(INSTANCE_INVALID), "".to_string());
+    #[actix_web::test]
+    async fn put() {
+        json::expect_200(TestRequest::put(), &get_space(INSTANCE_EXISTS), "".to_string()).await;
+        json::expect_422(TestRequest::put(), &get_space(INSTANCE_EXISTS), "".to_string()).await;
+        json::expect_200(TestRequest::put(), &get_space(INSTANCE_INVALID), "".to_string()).await;
     }
 
-    #[test]
-    fn patch() {
-        json::expect_200(Method::PATCH, &get_space(INSTANCE_EXISTS), "".to_string());
-        json::expect_422(Method::PATCH, &get_space(INSTANCE_EXISTS), "".to_string());
-        expect_400(Method::PATCH, &get_space(INSTANCE_INVALID));
+    #[actix_web::test]
+    async fn patch() {
+        json::expect_200(TestRequest::patch(), &get_space(INSTANCE_EXISTS), "".to_string()).await;
+        json::expect_422(TestRequest::patch(), &get_space(INSTANCE_EXISTS), "".to_string()).await;
+        expect_400(TestRequest::patch(), &get_space(INSTANCE_INVALID)).await;
     }
 
-    #[test]
-    fn get() {
-        expect_200(Method::GET, &get_space(INSTANCE_EXISTS));
-        expect_404(Method::GET, &get_space(INSTANCE_INVALID));
+    #[actix_web::test]
+    async fn get() {
+        expect_200(TestRequest::get(), &get_space(INSTANCE_EXISTS)).await;
+        expect_404(TestRequest::get(), &get_space(INSTANCE_INVALID)).await;
     }
 
-    #[test]
-    fn delete() {
-        expect_200(Method::DELETE, &get_space(INSTANCE_EXISTS));
-        expect_404(Method::DELETE, &get_space(INSTANCE_INVALID));
+    #[actix_web::test]
+    async fn delete() {
+        expect_200(TestRequest::delete(), &get_space(INSTANCE_EXISTS)).await;
+        expect_404(TestRequest::delete(), &get_space(INSTANCE_INVALID)).await;
     }
 
-    #[test]
-    fn post() {
-        expect_405(Method::POST, &get_space(INSTANCE_EXISTS));
-        expect_405(Method::POST, &get_space(INSTANCE_INVALID));
+    #[actix_web::test]
+    async fn post() {
+        expect_405(TestRequest::post(), &get_space(INSTANCE_EXISTS)).await;
+        expect_405(TestRequest::post(), &get_space(INSTANCE_INVALID)).await;
     }
 }

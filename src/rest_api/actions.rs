@@ -3,14 +3,15 @@ use std::sync::RwLock;
 use serde::Deserialize;
 
 use super::error_422;
+use super::from_properties_by_spaces;
 use super::ok_200;
-use super::to_spatial_objects;
 use super::web;
 use super::web::Data;
 use super::web::Json;
 use super::HandlerResult;
 use super::HttpResponse;
 use super::SharedState;
+use mercator_db::CoreQueryParameters;
 
 #[derive(Debug, Deserialize)]
 pub struct Query {
@@ -36,11 +37,11 @@ impl Query {
     }
 }
 // Also used for the root service.
-pub fn health() -> HttpResponse {
+pub async fn health() -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
-fn query((parameters, state): (Json<Query>, Data<RwLock<SharedState>>)) -> HandlerResult {
+async fn query((parameters, state): (Json<Query>, Data<RwLock<SharedState>>)) -> HandlerResult {
     trace!("POST '{:?}'", parameters);
     let context = state
         .read()
@@ -50,25 +51,30 @@ fn query((parameters, state): (Json<Query>, Data<RwLock<SharedState>>)) -> Handl
     if query.is_empty() {
         error_422(format!("Invalid query in '{:?}'", query))
     } else {
-        ok_200(
-            &context
-                .db()
-                .core_keys()
-                .iter()
-                .flat_map(|core| {
-                    match context.query(
-                        query,
-                        core,
-                        parameters.volume(),
-                        &parameters.view_port,
-                        parameters.resolution(),
-                    ) {
-                        Err(_) => vec![], // FIXME: Return errors here instead!!
-                        Ok(objects) => to_spatial_objects(objects),
-                    }
-                })
-                .collect::<Vec<_>>(),
-        )
+        let parameters = CoreQueryParameters {
+            db: context.db(),
+            output_space: None,
+            threshold_volume: parameters.volume(),
+            view_port: &parameters.view_port,
+            resolution: parameters.resolution(),
+        };
+
+        let results = context
+            .db()
+            .core_keys()
+            .iter()
+            .filter_map(|core| {
+                match context.query(query) {
+                    Err(_) => None, // FIXME: Return errors here instead!!
+                    Ok(tree) => match context.execute(&tree, core, &parameters) {
+                        Err(_) => None, // FIXME: Return errors here instead!!
+                        Ok(objects) => Some(from_properties_by_spaces(objects).collect::<Vec<_>>()),
+                    },
+                }
+            })
+            .flatten()
+            .collect::<Vec<_>>();
+        ok_200(&results)
     }
 }
 
@@ -79,30 +85,41 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 
 #[cfg(test)]
 mod routing {
-    use super::super::tests_utils::*;
+    use crate::rest_api::tests_utils::*;
+    use serde_json::json;
 
-    #[test]
-    fn health() {
+    #[actix_web::test]
+    async fn health() {
         let ep = &get_path("/health");
 
-        expect_200(Method::GET, ep);
+        expect_200(TestRequest::get(), ep).await;
 
-        expect_405(Method::POST, ep);
-        expect_405(Method::PUT, ep);
-        expect_405(Method::PATCH, ep);
-        expect_405(Method::DELETE, ep);
+        expect_405(TestRequest::post(), ep).await;
+        expect_405(TestRequest::put(), ep).await;
+        expect_405(TestRequest::patch(), ep).await;
+        expect_405(TestRequest::delete(), ep).await;
     }
 
-    #[test]
-    fn query() {
+    #[actix_web::test]
+    async fn query() {
         let ep = &get_path("/query");
 
-        expect_200(Method::POST, ep);
-        expect_422(Method::POST, ep);
+        expect_200(
+            TestRequest::post()
+                .set_json(json!({"query": "json(.,inside(hyperrectangle{[0,0,0],[0,1,1]}))"})),
+            ep,
+        )
+        .await;
 
-        expect_405(Method::GET, ep);
-        expect_405(Method::PUT, ep);
-        expect_405(Method::PATCH, ep);
-        expect_405(Method::DELETE, ep);
+        expect_422(TestRequest::post().set_json(json!({"query": "toto"})), ep).await;
+        expect_422(TestRequest::post().set_json(json!({"query": ""})), ep).await;
+        expect_400(TestRequest::post().set_json(json!({"invalid": true})), ep).await;
+        expect_400(TestRequest::post().set_json(json!({})), ep).await;
+        expect_400(TestRequest::post(), ep).await;
+
+        expect_405(TestRequest::get(), ep).await;
+        expect_405(TestRequest::put(), ep).await;
+        expect_405(TestRequest::patch(), ep).await;
+        expect_405(TestRequest::delete(), ep).await;
     }
 }

@@ -50,7 +50,8 @@ fn into_bool(string: &str) -> bool {
 }
 */
 
-fn main() {
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
     // If RUST_LOG is unset, set it to INFO, otherwise keep it as-is.
     if std::env::var("RUST_LOG").is_err() {
         std::env::set_var("RUST_LOG", "info");
@@ -78,21 +79,17 @@ fn main() {
         std::env::set_var("MERCATOR_DATA", ".");
     }
 
-    let hostname;
-    let port;
-    let data;
-
-    match std::env::var("MERCATOR_HOST") {
-        Ok(val) => hostname = val,
+    let hostname = match std::env::var("MERCATOR_HOST") {
+        Ok(val) => val,
         Err(val) => {
             error!("Invalid environment {} : `{}`", "MERCATOR_HOST", val);
             exit(1);
         }
     };
 
-    match std::env::var("MERCATOR_PORT") {
+    let port = match std::env::var("MERCATOR_PORT") {
         Ok(val) => match val.parse::<u16>() {
-            Ok(v) => port = v,
+            Ok(v) => v,
             Err(e) => {
                 error!("Could not convert to u16 {} : `{}`", "MERCATOR_PORT", e);
                 exit(1);
@@ -104,8 +101,8 @@ fn main() {
         }
     };
 
-    match std::env::var("MERCATOR_DATA") {
-        Ok(val) => data = val,
+    let data = match std::env::var("MERCATOR_DATA") {
+        Ok(val) => val,
         Err(val) => {
             error!("Could not fetch {} : `{}`", "MERCATOR_DATA", val);
             exit(1);
@@ -123,9 +120,6 @@ fn main() {
         })
         .collect::<Vec<_>>();
 
-    // FIXME: Why do we have to go through a temporary variable?
-    let datasets = datasets.iter().map(String::as_str).collect::<Vec<_>>();
-
     let db;
     // Load a Database:
     {
@@ -133,7 +127,7 @@ fn main() {
         // those is corrupted / incompatible.
         info_time!("Loading database index");
 
-        db = DataBase::load(&datasets)
+        db = DataBase::load(&datasets.iter().map(String::as_str).collect::<Vec<_>>())
             .unwrap_or_else(|e| panic!("Error while loading indices: {}", e));
     }
 
@@ -141,5 +135,6 @@ fn main() {
         &hostname,
         port,
         Data::new(RwLock::new(SharedState::new(db))),
-    );
+    )
+    .await
 }

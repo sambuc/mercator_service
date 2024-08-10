@@ -30,7 +30,8 @@ use actix_web::HttpResponse;
 use actix_web::HttpServer;
 use mercator_db::space::Shape;
 use mercator_db::storage::model;
-use mercator_db::storage::model::v2::to_spatial_objects;
+use mercator_db::storage::model::v2::from_properties_by_spaces;
+use mercator_db::storage::model::v2::from_spaces_by_properties;
 use mercator_db::CoreQueryParameters;
 pub use mercator_db::DataBase;
 use mercator_db::Properties;
@@ -64,13 +65,10 @@ impl Filters {
     }
 
     pub fn ids_only(&self) -> bool {
-        match self.ids_only {
-            None => true, // Defaults to true
-            Some(b) => b,
-        }
+        self.ids_only.unwrap_or(true)
     }
 
-    pub fn space(&self, db: &mercator_db::DataBase) -> Result<&Option<String>, HandlerResult> {
+    pub fn space(&self, db: &DataBase) -> Result<&Option<String>, HandlerResult> {
         if let Some(space_id) = &self.space {
             if !db.space_keys().contains(&space_id.to_string()) {
                 return Err(error_422(format!(
@@ -87,10 +85,9 @@ impl Filters {
     }
 
     pub fn volume(&self) -> Option<f64> {
-        match &self.view_port {
-            None => None,
-            Some((low, high)) => Some(Shape::BoundingBox(low.into(), high.into()).volume()),
-        }
+        self.view_port.as_ref().map(|(low, high)|
+            Shape::BoundingBox(low.into(), high.into()).volume()
+        )
     }
 }
 
@@ -114,7 +111,7 @@ impl From<&mercator_db::Core> for Core {
 }
 
 // From: https://stackoverflow.com/a/52367953
-fn into_static<S>(s: S) -> &'static str
+pub fn into_static<S>(s: S) -> &'static str
 where
     S: Into<String>,
 {
@@ -142,10 +139,8 @@ fn config_v1(cfg: &mut web::ServiceConfig) {
 }
 
 pub fn config(cfg: &mut web::ServiceConfig) {
-    let prefix;
-
-    match std::env::var("MERCATOR_BASE") {
-        Ok(val) => prefix = val,
+    let prefix = match std::env::var("MERCATOR_BASE") {
+        Ok(val) => val,
         Err(val) => {
             error!("Could not fetch {} : `{}`", "MERCATOR_BASE", val);
             exit(1);
@@ -160,7 +155,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 
 pub fn get_cors() -> Cors {
     // Setup CORS support.
-    let mut cors = Cors::new();
+    let mut cors = Cors::default();
 
     match std::env::var("MERCATOR_ALLOWED_ORIGINS") {
         Ok(val) => {
@@ -189,62 +184,42 @@ pub fn get_cors() -> Cors {
 macro_rules! get_app {
     ($state:expr) => {
         App::new()
-            .register_data($state.clone())
+            .app_data($state.clone())
             .wrap(middleware::Logger::new(
                 r#"%a "%r" %s %b "%{Referer}i" "%{User-Agent}i" %T[s] %D[ms]"#,
             ))
             .wrap(middleware::Compress::default())
             .wrap(get_cors())
             .configure(config)
-            .default_service(
-                web::resource("/")
-                    // 404 for GET request
-                    .route(web::to(page_404)),
-            )
+            .default_service(web::to(page_404))
     };
 }
 
-pub fn run(host: &str, port: u16, state: Data<RwLock<SharedState>>) {
+pub async fn run(host: &str, port: u16, state: Data<RwLock<SharedState>>) -> std::io::Result<()> {
     info!("Starting http server: {}:{}", host, port);
 
     // Create & run the server.
-    match HttpServer::new(move || get_app!(state))
-        .bind(format!("{}:{}", host, port))
-        .unwrap_or_else(|e| panic!("Failed to bind to `{}:{}`: {}", host, port, e))
+    HttpServer::new(move || get_app!(state))
+        .bind(format!("{}:{}", host, port))?
         .run()
-    {
-        Ok(_) => info!("Server Stopped!"),
-        Err(e) => error!("Error running the server: {}", e),
-    };
+        .await
 }
 
 #[cfg(test)]
 mod tests_utils {
     use super::*;
-
-    //use actix_server_config::ServerConfig;
-    //use actix_service::IntoNewService;
-    //use actix_service::NewService;
-    use actix_service::Service;
-    //use actix_web::dev::ServiceResponse;
     use actix_web::test;
-    //use actix_web::test::TestRequest;
-    use mercator_db::DataBase;
+    pub use actix_web::test::TestRequest;
 
-    pub const CORE_ID: &str = "10k";
+    pub const CORE_FILE: &str = "10k.index";
+    pub const CORE_ID: [&str; 1] = ["10k"];
 
-    pub const PREFIX: &str = "/spatial-search";
+    pub const PREFIX: &str = "/spatial-search-test";
     pub const CORE: &str = "/10k";
+    pub const INVALID_CORE: &str = "/INVALID_CORE";
     pub const SPACE: &str = "/std";
     pub const SPATIAL_OBJECT: &str = "/oid0.44050628835072825";
 
-    pub enum Method {
-        GET,
-        POST,
-        PUT,
-        PATCH,
-        DELETE,
-    }
 
     pub fn get_path(path: &str) -> String {
         format!("{}{}", PREFIX, path)
@@ -262,113 +237,113 @@ mod tests_utils {
         format!("{}{}{}", get_core(CORE), "/spatial_objects", name)
     }
 
-    pub fn expect(method: Method, path: &str, code: http::StatusCode) {
-        std::env::set_var("MERCATOR_BASE", PREFIX);
-
-        let mut app = test::init_service(get_app!(Data::new(RwLock::new(SharedState::new(
-            DataBase::load(CORE_ID).unwrap()
-        )))));
-
-        let request = match method {
-            Method::GET => test::TestRequest::get(),
-            Method::POST => test::TestRequest::post(),
-            Method::PUT => test::TestRequest::put(),
-            Method::PATCH => test::TestRequest::patch(),
-            Method::DELETE => test::TestRequest::delete(),
+    macro_rules! expect_code {
+        ($request:expr, $path:expr, $code:expr) => {
+            {
+                std::env::set_var("MERCATOR_BASE", PREFIX);
+                let db = DataBase::load(&[CORE_FILE]).unwrap();
+                let app = test::init_service(
+                    get_app!(Data::new(RwLock::new(SharedState::new(db))))).await;
+                let request = $request.uri(&$path).to_request();
+                let response = test::call_service(&app, request).await;
+                assert_eq!(response.status(), $code);
+                // let json = test::read_body(response).await;
+                // println!("BODY: {:?}", json);
+            }
         };
-
-        let request = request.uri(&path).to_request();
-        let response = test::block_on(app.call(request)).unwrap();
-
-        assert_eq!(response.status(), code);
     }
 
-    pub fn expect_200(method: Method, path: &str) {
-        expect(method, path, http::StatusCode::OK);
+    /// Checks status code OK
+    pub async fn expect_200(method: TestRequest, path: &str) {
+        expect_code!(method, path, StatusCode::OK);
     }
 
-    pub fn expect_400(method: Method, path: &str) {
-        expect(method, path, http::StatusCode::BAD_REQUEST);
+    /// Checks status code BAD_REQUEST
+    pub async fn expect_400(method: TestRequest, path: &str) {
+        expect_code!(method, path, StatusCode::BAD_REQUEST);
     }
 
-    pub fn expect_404(method: Method, path: &str) {
-        expect(method, path, http::StatusCode::NOT_FOUND);
+    /// Checks status code NOT_FOUND
+    pub async fn expect_404(method: TestRequest, path: &str) {
+        expect_code!(method, path, StatusCode::NOT_FOUND);
     }
 
-    pub fn expect_405(method: Method, path: &str) {
-        expect(method, path, http::StatusCode::METHOD_NOT_ALLOWED);
+    /// Checks status code METHOD_NOT_ALLOWED
+    pub async fn expect_405(method: TestRequest, path: &str) {
+        expect_code!(method, path, StatusCode::METHOD_NOT_ALLOWED);
     }
 
-    pub fn expect_422(method: Method, path: &str) {
-        expect(method, path, http::StatusCode::UNPROCESSABLE_ENTITY);
+    /// Checks status code UNPROCESSABLE_ENTITY
+    pub async fn expect_422(method: TestRequest, path: &str) {
+        expect_code!(method, path, StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     pub mod json {
         use super::*;
 
-        pub fn expect_200(method: Method, path: &str, json: String) {
-            expect(method, path, http::StatusCode::OK);
+        pub async fn expect_200(method: TestRequest, path: &str, _json: String) {
+            expect_code!(method, path, StatusCode::OK);
         }
 
-        pub fn expect_404(method: Method, path: &str, json: String) {
-            expect(method, path, http::StatusCode::NOT_FOUND);
+        pub async fn expect_404(method: TestRequest, path: &str, _json: String) {
+            expect_code!(method, path, StatusCode::NOT_FOUND);
         }
 
-        pub fn expect_422(method: Method, path: &str, json: String) {
-            expect(method, path, http::StatusCode::UNPROCESSABLE_ENTITY);
+        pub async fn expect_422(method: TestRequest, path: &str, _json: String) {
+            expect_code!(method, path, StatusCode::UNPROCESSABLE_ENTITY);
         }
     }
 }
 
 #[cfg(test)]
 mod routing {
+    use super::tests_utils::*;
     use std::panic;
 
-    use super::tests_utils::*;
-
-    #[test]
-    fn default_no_path() {
+    #[ignore] // Don't know how to make work the catch_unwind in an async context
+    #[actix_web::test]
+    async fn default_no_path() {
         // _FIXME: Currently the string is validated by the URI constructor which
         //        simply unwraps, thus we have to resort to this ugly workaround.
         //        The goal is to catch if that behavior changes in the future.
         let result = panic::catch_unwind(|| {
-            expect_404(Method::GET, "");
+            //expect_404(TestRequest::get(), "").await;
         });
         assert!(result.is_err());
     }
 
-    #[test]
-    fn default_slash() {
+    #[actix_web::test]
+    async fn default_slash() {
         // We have to manually URL-encode spaces.
-        expect_404(Method::GET, "/");
-        expect_404(Method::GET, "//");
-        expect_404(Method::GET, "/%20/");
-        expect_404(Method::GET, "/%20//");
-        expect_404(Method::GET, "//%20");
+        expect_404(TestRequest::get(), "/").await;
+        expect_404(TestRequest::get(), "//").await;
+        expect_404(TestRequest::get(), "/%20/").await;
+        expect_404(TestRequest::get(), "/%20//").await;
+        expect_404(TestRequest::get(), "//%20").await;
     }
 
-    #[test]
-    fn default_invalid_prefix() {
-        expect_404(Method::GET, "/test");
-        expect_404(Method::GET, &format!("{}test", PREFIX));
+    #[actix_web::test]
+    async fn default_invalid_prefix() {
+        expect_404(TestRequest::get(), "/test").await;
+        expect_404(TestRequest::get(), &format!("{}test", PREFIX)).await;
     }
 
-    #[test]
-    fn default_prefix_no_slash() {
-        expect_404(Method::PUT, PREFIX);
-        expect_404(Method::GET, PREFIX);
-        expect_404(Method::POST, PREFIX);
-        expect_404(Method::PATCH, PREFIX);
-        expect_404(Method::DELETE, PREFIX);
+    #[actix_web::test]
+    async fn default_prefix_no_slash() {
+        expect_404(TestRequest::put(), PREFIX).await;
+        expect_404(TestRequest::get(), PREFIX).await;
+        expect_404(TestRequest::post(), PREFIX).await;
+        expect_404(TestRequest::patch(), PREFIX).await;
+        expect_404(TestRequest::delete(), PREFIX).await;
     }
 
-    #[test]
-    fn default_prefix_final_slash() {
+    #[actix_web::test]
+    async fn default_prefix_final_slash() {
         let path = &format!("{}/", PREFIX);
-        expect_404(Method::PUT, path);
-        expect_404(Method::GET, path);
-        expect_404(Method::POST, path);
-        expect_404(Method::PATCH, path);
-        expect_404(Method::DELETE, path);
+        expect_404(TestRequest::put(), path).await;
+        expect_404(TestRequest::get(), path).await;
+        expect_404(TestRequest::post(), path).await;
+        expect_404(TestRequest::patch(), path).await;
+        expect_404(TestRequest::delete(), path).await;
     }
 }

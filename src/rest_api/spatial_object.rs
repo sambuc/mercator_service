@@ -2,8 +2,8 @@ use std::sync::RwLock;
 
 use super::error_400;
 use super::error_404;
+use super::from_properties_by_spaces;
 use super::ok_200;
-use super::to_spatial_objects;
 use super::web;
 use super::web::Data;
 use super::web::Path;
@@ -11,17 +11,16 @@ use super::CoreQueryParameters;
 use super::HandlerResult;
 use super::Properties;
 use super::SharedState;
+use mercator_db::{IterObjects, IterObjectsBySpaces};
 
-fn put(path: Path<String>) -> HandlerResult {
+async fn put(path: Path<String>) -> HandlerResult {
     trace!("PUT '{:?}'", path);
     error_400()
 }
 
-fn get((path, state): (Path<(String, String)>, Data<RwLock<SharedState>>)) -> HandlerResult {
+async fn get((path, state): (Path<(String, String)>, Data<RwLock<SharedState>>)) -> HandlerResult {
     trace!("GET '{:?}'", path);
     let (core, id) = path.into_inner();
-    let core = core;
-    let id = id;
     let context = state
         .read()
         .unwrap_or_else(|e| panic!("Can't acquire read lock of the database: {}", e));
@@ -39,20 +38,18 @@ fn get((path, state): (Path<(String, String)>, Data<RwLock<SharedState>>)) -> Ha
 
     match db.core(&core) {
         Ok(core) => match core.get_by_id(&parameters, &id) {
-            Ok(objects) => {
+            Ok(positions_by_spaces) => {
                 let value = Properties::Feature(id);
-                let tmp = objects
+                let tmp: IterObjectsBySpaces = positions_by_spaces
                     .into_iter()
                     .map(|(space, positions)| {
-                        let shapes = positions
-                            .into_iter()
-                            .map(|position| (position, &value))
-                            .collect();
-                        (space, shapes)
+                        let objects: IterObjects =
+                            Box::new(positions.map(|position| (position, &value)));
+                        (space, objects)
                     })
                     .collect();
 
-                let results = to_spatial_objects(tmp);
+                let results = from_properties_by_spaces(tmp).collect::<Vec<_>>();
 
                 if results.is_empty() {
                     error_404()
@@ -66,12 +63,12 @@ fn get((path, state): (Path<(String, String)>, Data<RwLock<SharedState>>)) -> Ha
     }
 }
 
-fn patch(path: Path<String>) -> HandlerResult {
+async fn patch(path: Path<String>) -> HandlerResult {
     trace!("PATCH Triggered on {}", path);
     error_400()
 }
 
-fn delete(path: Path<String>) -> HandlerResult {
+async fn delete(path: Path<String>) -> HandlerResult {
     trace!("DELETE Triggered on {}", path);
     error_400()
 }
@@ -95,35 +92,35 @@ mod routing {
 
     // FIXME: Add Body to request to see difference between (in)valid bodied requests
 
-    #[test]
-    fn put() {
-        json::expect_200(Method::PUT, &get_objects(INSTANCE_EXISTS), "".to_string());
-        json::expect_422(Method::PUT, &get_objects(INSTANCE_EXISTS), "".to_string());
-        json::expect_200(Method::PUT, &get_objects(INSTANCE_INVALID), "".to_string());
+    #[actix_web::test]
+    async fn put() {
+        json::expect_200(TestRequest::put(), &get_objects(INSTANCE_EXISTS), "".to_string()).await;
+        json::expect_422(TestRequest::put(), &get_objects(INSTANCE_EXISTS), "".to_string()).await;
+        json::expect_200(TestRequest::put(), &get_objects(INSTANCE_INVALID), "".to_string()).await;
     }
 
-    #[test]
-    fn patch() {
-        json::expect_200(Method::PATCH, &get_objects(INSTANCE_EXISTS), "".to_string());
-        json::expect_422(Method::PATCH, &get_objects(INSTANCE_EXISTS), "".to_string());
-        expect_400(Method::PATCH, &get_objects(INSTANCE_INVALID));
+    #[actix_web::test]
+    async fn patch() {
+        json::expect_200(TestRequest::patch(), &get_objects(INSTANCE_EXISTS), "".to_string()).await;
+        json::expect_422(TestRequest::patch(), &get_objects(INSTANCE_EXISTS), "".to_string()).await;
+        expect_400(TestRequest::patch(), &get_objects(INSTANCE_INVALID)).await;
     }
 
-    #[test]
-    fn get() {
-        expect_200(Method::GET, &get_objects(INSTANCE_EXISTS));
-        expect_404(Method::GET, &get_objects(INSTANCE_INVALID));
+    #[actix_web::test]
+    async fn get() {
+        expect_200(TestRequest::get(), &get_objects(INSTANCE_EXISTS)).await;
+        expect_404(TestRequest::get(), &get_objects(INSTANCE_INVALID)).await;
     }
 
-    #[test]
-    fn delete() {
-        expect_200(Method::DELETE, &get_objects(INSTANCE_EXISTS));
-        expect_404(Method::DELETE, &get_objects(INSTANCE_INVALID));
+    #[actix_web::test]
+    async fn delete() {
+        expect_200(TestRequest::delete(), &get_objects(INSTANCE_EXISTS)).await;
+        expect_404(TestRequest::delete(), &get_objects(INSTANCE_INVALID)).await;
     }
 
-    #[test]
-    fn post() {
-        expect_405(Method::POST, &get_objects(INSTANCE_EXISTS));
-        expect_405(Method::POST, &get_objects(INSTANCE_INVALID));
+    #[actix_web::test]
+    async fn post() {
+        expect_405(TestRequest::post(), &get_objects(INSTANCE_EXISTS)).await;
+        expect_405(TestRequest::post(), &get_objects(INSTANCE_INVALID)).await;
     }
 }

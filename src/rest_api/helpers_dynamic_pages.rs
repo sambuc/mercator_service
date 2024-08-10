@@ -7,7 +7,7 @@ use actix_web::HttpResponse;
 use super::HandlerResult;
 
 fn error(code: StatusCode) -> HandlerResult {
-    Ok(Either::A(HttpResponse::build(code).finish()))
+    Ok(Either::Left(HttpResponse::build(code).finish()))
 }
 
 pub fn error_400() -> HandlerResult {

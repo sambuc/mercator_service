@@ -1,7 +1,9 @@
 use mercator_db::CoreQueryParameters;
 use mercator_db::DataBase;
+use mercator_parser::Bag;
 use mercator_parser::Executor;
 use mercator_parser::FiltersParser;
+use mercator_parser::Projection;
 use mercator_parser::QueryParser;
 use mercator_parser::Validator;
 
@@ -32,24 +34,35 @@ impl SharedState {
         &self.query_parser
     }
 
-    pub fn filter<'q>(
-        &'q self,
-        filter: &'q str,
-        core: &'q str,
-        output_space: &'q Option<String>,
-        volume: Option<f64>,
-        view_port: &'q Option<(Vec<f64>, Vec<f64>)>,
-        resolution: &'q Option<Vec<u32>>,
-    ) -> mercator_db::ResultSet<'q> {
+    pub fn execute<'e, T>(
+        &'e self,
+        tree: &'e T, //&'e Bag,
+        core: &'e str,
+        parameters: &'e CoreQueryParameters<'e>,
+    ) -> mercator_db::ResultSet<'e>
+    where
+        T: Executor<'e, ResultSet = mercator_db::ResultSet<'e>>,
+    {
+        // Execute filter.
+        let execution = {
+            info_time!("Execution");
+            // _FIXME: Output space is defined as part of the projection
+            //        and is ignored by projections operators.
+            tree.execute(core, parameters)
+        };
+
+        match execution {
+            Err(e) => {
+                debug!("Execution failed: \n{:?}", e);
+                Err(e)
+            }
+            results @ Ok(_) => results,
+        }
+    }
+
+    pub fn filter<'q>(&'q self, filter: &'q str) -> Result<Bag, String> {
         let parser = self.filter_parser();
         let parse;
-        let parameters = CoreQueryParameters {
-            db: self.db(),
-            output_space: output_space.as_ref().map(String::as_str),
-            threshold_volume: volume,
-            view_port,
-            resolution,
-        };
 
         // Parse Input
         {
@@ -63,52 +76,20 @@ impl SharedState {
                 Err(format!("{}", e))
             }
             Ok(tree) => {
-                let validation;
-                let execution;
-
                 // Check type coherence & validate tree
                 {
                     debug_time!("Type check");
-                    validation = tree.validate();
-                }
-                if validation.is_err() {
-                    debug!("Type check failed");
-                    return Err("Type check failed".to_string());
+                    let _ = tree.validate()?;
                 }
 
-                // Execute filter.
-                {
-                    info_time!("Execution");
-                    execution = tree.execute(core, &parameters);
-                }
-                match execution {
-                    Err(e) => {
-                        debug!("Parsing failed: \n{:?}", e);
-                        Err(e)
-                    }
-                    results @ Ok(_) => results,
-                }
+                Ok(tree)
             }
         }
     }
 
-    pub fn query<'q>(
-        &'q self,
-        query: &str,
-        core: &str,
-        volume: Option<f64>,
-        view_port: &'q Option<(Vec<f64>, Vec<f64>)>,
-        resolution: &'q Option<Vec<u32>>,
-    ) -> mercator_db::ResultSet<'q> {
+    pub fn query(&self, query: &str) -> Result<Projection, String> {
         let parser = self.query_parser();
         let parse;
-        let parameters = CoreQueryParameters {
-            db: self.db(),
-            output_space: None,
-            threshold_volume: volume,
-            view_port,
-            resolution,
-        };
 
         // Parse Input
         {
@@ -120,35 +101,15 @@ impl SharedState {
                 debug!("Parsing failed: \n{:?}", e);
                 Err(e.to_string())
             }
-            Ok(None) => Ok(vec![]),
+            Ok(None) => Err("Query is empty!".to_string()),
             Ok(Some(tree)) => {
-                let validation;
-                let execution;
-
                 // Check type coherence & validate tree
                 {
                     debug_time!("Type check");
-                    validation = tree.validate();
-                }
-                if validation.is_err() {
-                    debug!("Type check failed");
-                    return Err("Type check failed".to_string());
+                    let _ = tree.validate()?;
                 }
 
-                // Execute filter.
-                {
-                    info_time!("Execution");
-                    // _FIXME: Output space is defined as part of the projection
-                    //        and is ignored by projections operators.
-                    execution = tree.execute(core, &parameters);
-                }
-                match execution {
-                    Err(e) => {
-                        debug!("Parsing failed: \n{:?}", e);
-                        Err(e)
-                    }
-                    results @ Ok(_) => results,
-                }
+                Ok(tree)
             }
         }
     }

@@ -8,11 +8,12 @@ use super::web;
 use super::web::Data;
 use super::web::Json;
 use super::Core;
+use super::CoreQueryParameters;
 use super::Filters;
 use super::HandlerResult;
 use super::SharedState;
 
-fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> HandlerResult {
+async fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> HandlerResult {
     trace!("POST '{:?}'", parameters);
     let context = state
         .read()
@@ -40,17 +41,23 @@ fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> Hand
                     }
                 }
                 Some(filter) => {
+                    let core_parameters = CoreQueryParameters {
+                        db,
+                        output_space: space.as_ref().map(String::as_str),
+                        threshold_volume: parameters.volume(),
+                        view_port: &parameters.view_port,
+                        resolution: parameters.resolution(),
+                    };
+
+                    let tree = match context.filter(filter) {
+                        Err(e) => return error_422(e),
+                        Ok(tree) => tree,
+                    };
+
                     // Retrieve the list of core ids.
                     let mut results = HashSet::new();
                     for core in db.core_keys() {
-                        match context.filter(
-                            filter,
-                            core,
-                            &space,
-                            parameters.volume(),
-                            &parameters.view_port,
-                            parameters.resolution(),
-                        ) {
+                        match context.execute(&tree, core, &core_parameters) {
                             Err(e) => return error_422(e),
                             Ok(objects) => {
                                 // If the list of SpaceObjects is not empty, add
@@ -59,7 +66,7 @@ fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> Hand
                                     results.insert(core.to_string());
                                 }
                             }
-                        }
+                        };
                     }
 
                     // Format the list or the whole core objects.
@@ -79,17 +86,17 @@ fn post((parameters, state): (Json<Filters>, Data<RwLock<SharedState>>)) -> Hand
     }
 }
 
-fn put() -> HandlerResult {
+async fn put() -> HandlerResult {
     trace!("PUT Triggered!");
     error_400()
 }
 
-fn patch() -> HandlerResult {
+async fn patch() -> HandlerResult {
     trace!("PATCH Triggered!");
     error_400()
 }
 
-fn delete() -> HandlerResult {
+async fn delete() -> HandlerResult {
     trace!("DELETE Triggered!");
     error_400()
 }
@@ -108,49 +115,47 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 mod routing {
     use super::super::tests_utils::*;
 
-    const COLLECTION: &str = "/cores";
-
     // FIXME: Add Body to request to see difference between (in)valid bodied requests
 
-    #[test]
-    fn post() {
-        expect_200(Method::POST, &get_core(""));
-        json::expect_200(Method::POST, &get_core(""), "".to_string());
+    #[actix_web::test]
+    async fn post() {
+        expect_200(TestRequest::post(), &get_core("")).await;
+        json::expect_200(TestRequest::post(), &get_core(""), "".to_string()).await;
 
-        json::expect_422(Method::POST, &get_core(""), "".to_string());
+        json::expect_422(TestRequest::post(), &get_core(""), "".to_string()).await;
 
-        expect_400(Method::POST, &get_core(""));
+        expect_400(TestRequest::post(), &get_core("")).await;
     }
 
-    #[test]
-    fn put() {
-        json::expect_200(Method::PUT, &get_core(""), "".to_string());
+    #[actix_web::test]
+    async fn put() {
+        json::expect_200(TestRequest::put(), &get_core(""), "".to_string()).await;
 
-        json::expect_422(Method::PUT, &get_core(""), "".to_string());
+        json::expect_422(TestRequest::put(), &get_core(""), "".to_string()).await;
 
-        expect_400(Method::PUT, &get_core(""));
+        expect_400(TestRequest::put(), &get_core("")).await;
     }
 
-    #[test]
-    fn patch() {
-        json::expect_200(Method::PATCH, &get_core(""), "".to_string());
+    #[actix_web::test]
+    async fn patch() {
+        json::expect_200(TestRequest::patch(), &get_core(""), "".to_string()).await;
 
-        json::expect_422(Method::PATCH, &get_core(""), "".to_string());
+        json::expect_422(TestRequest::patch(), &get_core(""), "".to_string()).await;
 
-        expect_400(Method::PATCH, &get_core(""));
+        expect_400(TestRequest::patch(), &get_core("")).await;
     }
 
-    #[test]
-    fn delete() {
-        json::expect_200(Method::DELETE, &get_core(""), "".to_string());
+    #[actix_web::test]
+    async fn delete() {
+        json::expect_200(TestRequest::delete(), &get_core(""), "".to_string()).await;
 
-        json::expect_422(Method::DELETE, &get_core(""), "".to_string());
+        json::expect_422(TestRequest::delete(), &get_core(""), "".to_string()).await;
 
-        expect_400(Method::DELETE, &get_core(""));
+        expect_400(TestRequest::delete(), &get_core("")).await;
     }
 
-    #[test]
-    fn get() {
-        expect_405(Method::GET, &get_core(""));
+    #[actix_web::test]
+    async fn get() {
+        expect_405(TestRequest::get(), &get_core("")).await;
     }
 }

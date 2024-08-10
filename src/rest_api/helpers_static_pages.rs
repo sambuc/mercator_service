@@ -9,7 +9,7 @@ use super::HandlerResult;
 fn error(code: StatusCode) -> HandlerResult {
     let path = format!("static/errors/{}.html", u16::from(code));
 
-    Ok(Either::B(NamedFile::open(path)?.set_status_code(code)))
+    Ok(Either::Right(NamedFile::open(path)?.set_status_code(code)))
 }
 
 pub fn error_400() -> HandlerResult {
